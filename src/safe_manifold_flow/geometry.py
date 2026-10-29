@@ -35,6 +35,12 @@ class SphereGeometry:
         angle = torch.atan2(length, dot)
         return angle * direction / length.clamp_min(torch.finfo(point.dtype).eps)
 
+    def distance(self, point: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        point, target = torch.broadcast_tensors(point, target)
+        self._check_point(point)
+        self._check_point(target)
+        return torch.atan2(torch.linalg.cross(point, target).norm(dim=-1), (point*target).sum(dim=-1))
+
     def path(self, source: torch.Tensor, target: torch.Tensor, time: torch.Tensor):
         shooting = self.log(source, target)
 
@@ -45,15 +51,23 @@ class SphereGeometry:
 
         return torch.func.jvp(curve, (time,), (torch.ones_like(time),))
 
-    def integrate(self, field, source: torch.Tensor, steps: int = 100) -> torch.Tensor:
+    def integrate(self, field, source: torch.Tensor, steps: int = 100, snapshot_times=None):
         if steps < 1:
             raise ValueError("integration: steps must be positive")
         self._check_point(source)
         point = source.clone()
+        snapshots = {}
+        requested = {} if snapshot_times is None else {round(float(t)*steps): float(t) for t in snapshot_times}
+        if any(t < 0 or t > 1 or abs(round(t*steps)-t*steps) > 1e-8 for t in requested.values()):
+            raise ValueError("integration: snapshot times must be on the integration grid")
+        if 0 in requested:
+            snapshots[requested[0]] = point.clone()
         for index in range(steps):
             time = torch.tensor(index / steps, dtype=point.dtype, device=point.device)
             velocity = field(time, point)
             if not torch.isfinite(velocity).all() or torch.any((point * velocity).sum(-1).abs() > 2e-5):
                 raise ValueError("tangent: generation field is not a finite tangent velocity")
             point = self.exp(point, velocity / steps)
-        return point
+            if index+1 in requested:
+                snapshots[requested[index+1]] = point.clone()
+        return point if snapshot_times is None else {"positions": point, "snapshots": snapshots}

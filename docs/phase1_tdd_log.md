@@ -14,3 +14,20 @@ The applicant approved the Phase 1 specification, four tickets and two public te
 Ticket 01 completed on the CPU in the existing scientific environment. Final check: `python -m pytest -q` — 6 passed. The test runner emitted an environment-level argparse warning on the whole-suite command; tests passed. No real-data preparation, fitting, checkpoint, rollout benchmark or Phase 2 implementation has occurred.
 
 The exponential computes the spherical formula then removes floating-point norm drift; it is not normalized ambient Euler and not a safety repair. Both point validity and unscaled field tangency are checked before integration. The real LShape file is not present and shell download failed, so ticket 02 remains blocked.
+
+## Real-data learning and evaluation cycles
+
+| Cycle | Public behavior | Red observation | Green observation |
+| --- | --- | --- | --- |
+| 07 | MAT preparation and declared spherical embedding | Study module absent | Seven recordings resample/embed with known fixture goal/radius |
+| 08 | Past context and terminal padding | Batch operation absent; first attempt exposed float32 gap rounding | Correct paired history, gap and padded future targets |
+| 09 | Repeated-point wrapped prior and reproducible bank | Noise field absent | Same draw per chunk, unit sphere and seed reproducibility |
+| 10 | Bounded fitting and generation | Fit operation absent | Fixed validation bank improves and samples are valid |
+| 11 | Safe checkpoint round trip | Loader absent | Identical seeded generated output after reload |
+| 12 | Autonomous history and last partial execution | Rollout operation absent | Reference indices 1,5,9 and past-only conditioning verified |
+| 13 | Intrinsic angular metric | Distance operation absent | Quarter-circle distance is pi/2 |
+| 14 | Actual generation-time snapshots | Snapshot argument absent | Source/middle/returned chunk captured without substitution |
+| 15 | Failure-inclusive scientific evaluation | Evaluation operation absent | Known success and antipodal failure retained as 1/2 successes |
+| 16 | Full context-expanded epoch | Epoch mode absent | All valid contexts and actual update count verified |
+
+Complete suite after these cycles: 16 tests passed. The first real-data 200-epoch window-only run failed its scientific gate; the applicant approved the epoch correction before retraining. Scientific validation is separate from test-fixture success.

@@ -1,6 +1,6 @@
 # Phase 1 specification — original RFMP on spherical LShape
 
-**Status: ready-for-agent — applicant approved this specification, ticket breakdown and the two test interfaces on 29 October 2026.** Final direct-S² methodology passed its independent audit. This specification fixes previously undocumented reproduction choices openly; it does not claim these choices were verified in author code. Phase 2 is excluded.
+**Status: ready-for-agent — applicant approved the specification/tickets/test interfaces and subsequently approved all-context epoch expansion on 29 October 2026.** Final direct-S² methodology passed its independent audit. This specification fixes previously undocumented reproduction choices openly; it does not claim these choices were verified in author code. Phase 2 is excluded.
 
 ## Problem Statement
 
@@ -58,7 +58,7 @@ These are **our reproducibility conventions**, not verified original-author impl
 | Network depth | Five hidden affine layers of width 64, one learned scalar Swish parameter per hidden layer, followed by an ambient three-vectors-per-waypoint output projected factorwise to the current tangent spaces. Report actual parameter count; do not claim the paper's approximate count was matched. |
 | Network inputs | Current noisy chunk, generation time, reference/context directions and normalized history gap. No rotation frames or safety information. |
 | Loss | Batch mean of the product-metric squared tangent errors, summing over sphere factors. Target derivative obtained by differentiating the source-to-data geodesic with respect to generation time. Both compared vectors are based at the intermediate chunk. |
-| Training | Batch size 128, seed 0, one pass over the training pairs per epoch, reshuffling pairs and resampling training context/noise/time. Adam defaults other than the reported learning rate. No weight decay or architecture search. |
+| Training | Batch size 128, seed 0, one pass over ALL valid training window/context pairs per epoch, with the window split fixed before expansion; reshuffle expanded pairs and resample source noise/time. The applicant approved this correction after the first window-only run failed. Adam defaults other than the reported learning rate. No weight decay or architecture search. |
 | Checkpoint selection | Update EMA after each optimizer step. Evaluate EMA using an immutable validation context/noise/time bank; preserve the best EMA checkpoint and its epoch/score, together with the untrained reference score. Test-bank draws are separate and frozen. |
 | Geometry and integration | Sphere exponential Euler, 100 equal generation steps from 0 to 1; evaluate the field at left endpoints. No arbitrary output clipping or Euclidean interpolation. Reject nonfinite values, invalid points or unresolved antipodal logarithms. Coincident exp/log limits are handled. |
 | Precision | Float64 for independent geometry checks and geodesic-target construction; float32 model training/sampling. Record actual runtime precision and geometry errors. |
@@ -99,3 +99,9 @@ Phase 2 CBF implementation or tuning; SO(3) lift/frames/roll; image encoders; ex
 The final method audit found no methodology blockers. The specification choices above resolve operational gaps openly and remain reviewable. Source: [original RFMP](https://arxiv.org/html/2403.10672v1); [final method audit](../../docs/reviews/final_s2_audit.md).
 
 The project hard stop remains 30 October 09:45 China time or earlier at the 18-hour total cap. Approximately seven hours of the conservative preparation/discussion window had elapsed at 22:45 on 29 October. Reserve at most five additional hours for Phase 1, including its workflow gates and baseline preparation; work stops sooner if the overall deadline or budget is reached. A partial, failed or blocked Phase 1 remains honestly reportable and does not authorize Phase 2.
+
+## Approved epoch correction and requested visualization
+
+The first run used 1,108 windows per epoch (1,800 updates across 200 epochs) and failed 0/35 rollouts. It is preserved under runs/phase1-baseline. The applicant approved expanding the fixed training windows to all 109,739 valid context pairs: 858 batches per epoch and 171,600 updates in 200 epochs. Keep model/prior/learning rate/EMA/validation bank/gate thresholds unchanged. Bounded unit fixtures may retain window mode explicitly; scientific training defaults to all-context mode.
+
+The applicant requested a paper-style six-panel spherical transport visualization. Use actual same-sample snapshots at generation times 0, 0.5 and 1, orange embedded demonstrations and blue first predicted positions from joint generated chunks. Rows are validation-window and test-window conditions, clearly labeled rather than claiming a stable-model comparison. Preserve plotted sample banks and export PNG/PDF; separately report autonomous rollout quality.

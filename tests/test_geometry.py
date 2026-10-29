@@ -60,3 +60,9 @@ def test_small_steps_do_not_hide_an_invalid_radial_velocity():
     north = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
     with pytest.raises(ValueError, match="tangent"):
         SphereGeometry().integrate(lambda time, point: 0.001 * point, north, steps=100)
+
+
+def test_distance_is_the_round_metric_angle_not_the_ambient_chord():
+    north = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
+    equator = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
+    torch.testing.assert_close(SphereGeometry().distance(north, equator), torch.tensor(math.pi/2, dtype=torch.float64))
