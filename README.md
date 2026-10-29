@@ -6,6 +6,8 @@ A small research-preparation project on learning and steering robot pointing dir
 
 ![Actual spherical FM transport](docs/results/flow_transport.png)
 
+[Three animated rollout walkthroughs](docs/results/phase1_animations.md) show complete sampling → tangent flow → selection/advancement cycles using the frozen model (seeds 101, 202 and 303).
+
 Start with the [core methodology](methodology.md), [approved Phase 1 specification](.scratch/rfmp-phase1/spec.md), [tickets](.scratch/rfmp-phase1/ticket_plan.md) and [TDD evidence](docs/phase1_tdd_log.md). Paper details that could not be verified in original author code are explicit reproducibility conventions in the specification.
 
 ## Method
