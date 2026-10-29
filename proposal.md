@@ -112,6 +112,8 @@ a_i = grad_S² h_i = -(I-x_i x_iᵀ)c.
 
 The intended constraint is `angle(x_i,c)>=theta`. This reverses the sign of the geometric CBF paper's keep-in satellite cone.
 
+The applicant approved a slightly expanded internal cone. For steering, use `theta_internal=theta+delta`, `delta>0`, in the barrier formulas; retain the requested `theta` for reported clearance and the final safety check. The margin magnitude is a specification item, not a new physical exclusion requirement.
+
 For the selected terminal-recovery design, the SAD-Flower-inspired condition is
 
 ```text
@@ -133,7 +135,7 @@ The applicant selected unconstrained source noise and final-generation waypoint 
 
 SAD-Flower uses an initial unsteered phase and a controlled phase with prescribed-time scheduling; the activation time is a later numerical design parameter. Its theorem assumes joint feasibility and uses a singular gain near terminal generation time. An ordinary constant-gain invariance CBF does not alone establish finite-time recovery from unsafe source waypoints. [SAD-Flower Sections 5.2–5.3](https://arxiv.org/html/2511.05355v3#S5)
 
-The finite-step implementation must specify terminal stopping, residual tolerances and failure reporting. A possible practical design is a tightened internal forbidden cone to retain a margin at the actual constraint; it remains a design proposal, not an established guarantee. At the forbidden center, the spherical barrier gradient vanishes while an unsafe-recovery inequality can demand a positive derivative, so recovery feasibility must not be asserted for every source sample. Near-degenerate cases and any retries/rejections must be visible in the evaluation.
+The finite-step implementation must specify terminal stopping, residual tolerances and failure reporting. The selected internal forbidden-cone margin provides room for recovery error but is not an established discrete safety guarantee; final positions must still be checked against the actual cone. At the forbidden center, the spherical barrier gradient vanishes while an unsafe-recovery inequality can demand a positive derivative, so recovery feasibility must not be asserted for every source sample. Near-degenerate cases and any retries/rejections must be visible in the evaluation. Stop-on-failure versus bounded retries remains a design choice.
 
 For a chunk-based extension, the supplied current direction should already be safe for any claimed safe rollout. Making the generated chunk safe cannot repair the previously supplied current direction or guarantee that the connection to the first commanded position avoids the cone. The claim sought concerns generated positions at the end of FM generation, not intermediate candidates or connecting arcs. No fixed physical endpoint constraints are part of Phase 1.
 
@@ -184,4 +186,4 @@ Detailed paper readings: [flow matching/stability](docs/references/flow_matching
 
 Proposed hard stop is 30 October 10:00 China time or earlier, retaining the rest of the day for application preparation. Confirm the cutoff during grilling. Research for this proposal began about 15:58 China time on 29 October. Do not consume the entire budget merely because it is available.
 
-Follow **grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed boundaries**. Phase 1's RFMP method and Phase 2's same-chunk/replanning structure are selected. Hard endpoint pinning and a separate whole-trajectory model are outside that structure. Remaining decisions include numerical recovery/internal margin, under-specified reproduction details, evaluation thresholds and the hard stop. LASA LShape, Git management and terminal-recovery initialization are agreed. No project implementation, tests, generated data, model training or experiments are approved yet.
+Follow **grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed boundaries**. Phase 1's RFMP method, Phase 2's same-chunk/replanning structure and an internal angular safety margin are selected. Hard endpoint pinning and a separate whole-trajectory model are outside that structure. Remaining decisions include failure handling, numerical parameters, under-specified reproduction details, evaluation thresholds and the hard stop. LASA LShape, Git management and terminal-recovery initialization are agreed. No project implementation, tests, generated data, model training or experiments are approved yet.

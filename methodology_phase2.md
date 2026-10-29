@@ -1,6 +1,6 @@
 # Phase 2 methodology proposal
 
-29 October 2026. **Methodology under design discussion; not an approved specification or implementation.** The applicant approved retaining RFMP's same position-chunk horizons and replanning loop for Phase 2, steering each FM generation solve while freezing the Phase 1 model. The internal safety margin and remaining numerical/evaluation choices are still proposed. Undocumented Phase 1 reproduction details remain specification items.
+29 October 2026. **Methodology under design discussion; not an approved specification or implementation.** The applicant approved retaining RFMP's same position-chunk horizons and replanning loop for Phase 2, steering each FM generation solve while freezing the Phase 1 model. A slightly expanded internal forbidden cone is also approved; its margin magnitude remains a specification item. Failure handling and remaining numerical/evaluation choices are still proposed. Undocumented Phase 1 reproduction details remain specification items.
 
 ## Objective and scope
 
@@ -52,7 +52,7 @@ Follow SAD-Flower's distinction between an initial nominal generation interval a
 
 For an unsafe initial barrier, the equality solution `h(s)=h(s_on) exp(-integral(phi))` can stay negative for every `s<1`. The singular terminal argument is therefore not an exact finite-step certificate. Do not evaluate the singular expression at `s=1` or silently report its ideal theorem as observed safety.
 
-**Recommended numerical design:** steer against a slightly expanded internal cap `theta_internal=theta+delta`, with `0<theta<theta+delta<pi`, stop the controlled integration at a specified finite point and evaluate safety against the actual requested cap. If the internal barrier residual is bounded below by `-eta`, then
+**Approved margin design:** steer against a slightly expanded internal cap `theta_internal=theta+delta`, with `0<theta<theta+delta<pi`, and evaluate safety against the actual requested cap. Substitute `theta_internal` in the filter's barrier formulas. The numerical stopping protocol and exact margin remain to be specified. If the internal barrier residual is bounded below by `-eta`, then
 
 ```text
 h_actual >= cos(theta) - cos(theta+delta) - eta.
@@ -60,7 +60,7 @@ h_actual >= cos(theta) - cos(theta+delta) - eta.
 
 This identity explains the margin; it does not establish a discrete residual bound. The returned sample must still be checked directly. Declare stopping time, margin, tolerance and guidance parameters before final evaluation. No undisclosed post-hoc waypoint repair or success-only rejection sampling.
 
-At `x_i=c`, the barrier gradient vanishes while recovery can require a positive derivative; the constraint is infeasible there. A zero-gradient constraint that is already satisfied instead needs no correction. Treat zero/near-zero gradient cases explicitly. Adding a denominator epsilon alone does not solve the original inequality. Report failed or unresolved generations and do not advance a rollout with a chunk that failed its declared acceptance check. A stopped rollout counts as a failure, not a completed safe motion.
+At `x_i=c`, the barrier gradient vanishes while recovery can require a positive derivative; the constraint is infeasible there. A zero-gradient constraint that is already satisfied instead needs no correction. Treat zero/near-zero gradient cases explicitly. Adding a denominator epsilon alone does not solve the original inequality. Report failed or unresolved generations and do not advance a rollout with a chunk that failed its declared acceptance check. **Pending failure-policy choice:** stop the rollout at its last accepted direction and count a failure (recommended), or retry from fresh noise with a fixed attempt limit and full attempt accounting. A stopped rollout counts as a failure, not a completed safe motion.
 
 ## Evaluation that isolates the extension
 
@@ -79,4 +79,4 @@ Use terminal goal error as an outcome, not as a hard safety constraint or an imp
 
 The intended result concerns **sampled directions returned by the generator and the discrete position-command rollout**. Connecting arcs, including the connection from the supplied current direction to the next command, can remain unsafe. No dynamic-consistency, physical tracking or torque-level guarantee is claimed. The supplied initial direction cannot be retroactively repaired by filtering future generated positions.
 
-**Approved decision:** retain the same RFMP position-chunk horizons, observation conditioning and replanning loop; add generation-time correction using the frozen Phase 1 model. Do not replace the sampler with a separate complete-trajectory model. Remaining design discussion covers the cone/scenario setup, internal safety margin, failure accounting and evaluation criteria; exact numerical values belong in the approved specification. No implementation, tests or experiments have been started.
+**Approved decisions:** retain the same RFMP position-chunk horizons, observation conditioning and replanning loop; add generation-time correction using the frozen Phase 1 model; use a slightly expanded internal cap and measure actual-cone safety. Do not replace the sampler with a separate complete-trajectory model. Remaining design discussion covers the cone/scenario setup, failure accounting and evaluation criteria; exact numerical values, including margin magnitude, belong in the approved specification. No implementation, tests or experiments have been started.

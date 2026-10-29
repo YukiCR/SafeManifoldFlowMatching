@@ -18,7 +18,7 @@ Approved design choices so far:
 
 The Phase 1 method, documented RFMP settings and Phase 2 chunk/replanning structure are selected. Do not add hard start/goal pinning, a new sequence architecture or mandatory SRFMP to that reproduction. Undocumented reproduction details and Phase 2 numerical safety/evaluation choices remain to be resolved. Overall proposal approval and the specification/tickets/TDD stages remain pending. See the [provisional proposal](proposal.md).
 
-Phase 1's method design is settled; its remaining reproduction details will be explicit in the specification. The [Phase 2 methodology draft](methodology_phase2.md) records the approved chunk/replanning structure and proposed barrier equations, numerical terminal-recovery handling, evaluation and failure accounting. An internal angular margin remains a pending design choice.
+Phase 1's method design is settled; its remaining reproduction details will be explicit in the specification. The [Phase 2 methodology draft](methodology_phase2.md) records the approved chunk/replanning structure and internal angular safety margin: filter against a slightly expanded forbidden cone, evaluate against the actual cone. The margin magnitude and numerical settings remain specification items. Failure handling and evaluation are still under design discussion.
 
 The [data-source comparison](data_options.md) records the alternatives and the selection of LASA LShape. Its small number of independent demonstrations limits the conclusions of the initial trial.
 
