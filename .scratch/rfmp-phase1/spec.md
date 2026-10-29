@@ -105,3 +105,7 @@ The project hard stop remains 30 October 09:45 China time or earlier at the 18-h
 The first run used 1,108 windows per epoch (1,800 updates across 200 epochs) and failed 0/35 rollouts. It is preserved under runs/phase1-baseline. The applicant approved expanding the fixed training windows to all 109,739 valid context pairs: 858 batches per epoch and 171,600 updates in 200 epochs. Keep model/prior/learning rate/EMA/validation bank/gate thresholds unchanged. Bounded unit fixtures may retain window mode explicitly; scientific training defaults to all-context mode.
 
 The applicant requested a paper-style six-panel spherical transport visualization. Use actual same-sample snapshots at generation times 0, 0.5 and 1, orange embedded demonstrations and blue first predicted positions from joint generated chunks. Rows are validation-window and test-window conditions, clearly labeled rather than claiming a stable-model comparison. Preserve plotted sample banks and export PNG/PDF; separately report autonomous rollout quality.
+
+## Execution outcome
+
+Completed 29 October 2026: the approved all-context 200-epoch study passed 35/35 autonomous rollouts without threshold changes. See the [baseline report](../../docs/results/phase1_report.md). Earlier data-access notes describe the resolved planning-stage blocker. All four Phase 1 tickets are complete. No Phase 2 implementation is included.

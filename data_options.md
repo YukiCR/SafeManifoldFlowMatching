@@ -1,6 +1,6 @@
 # Demonstration-source choice: synthetic sphere paths or LASA
 
-29 October 2026. **Decision: the applicant selected LASA LShape for initial trials.** The comparison below preserves the design rationale. No dataset has been downloaded, generated, transformed or used for training.
+29 October 2026. **Decision: the applicant selected LASA LShape for initial trials.** The comparison below preserves the design rationale. This was a planning-stage comparison. Subsequently, the official LShape dataset was supplied, checked and used for the completed Phase 1 baseline; see [results](docs/results/phase1_report.md).
 
 **Later decision:** Phase 1 reimplements original RFMP's LASA method and inherits its documented settings. It uses 200-step demonstrations, observation-conditioned short position chunks and receding-horizon rollout. The original complete-trajectory proposal below is historical context; see the [current proposal](proposal.md) for the inherited settings and unresolved reproduction details.
 

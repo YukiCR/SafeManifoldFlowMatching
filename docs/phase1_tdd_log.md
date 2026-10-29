@@ -31,3 +31,9 @@ The exponential computes the spherical formula then removes floating-point norm 
 | 16 | Full context-expanded epoch | Epoch mode absent | All valid contexts and actual update count verified |
 
 Complete suite after these cycles: 16 tests passed. The first real-data 200-epoch window-only run failed its scientific gate; the applicant approved the epoch correction before retraining. Scientific validation is separate from test-fixture success.
+
+## Completed real-data validation
+
+The applicant supplied the official LShape MAT file, which passed record/time/finite/goal checks. The approved all-context run completed 200 epochs and 171,600 optimizer steps in 572.45 seconds. Best EMA epoch: 192; validation loss 0.038979; test loss 0.084126. All 35 autonomous rollouts passed the unchanged gate. The 16-test suite passed before the full run; no learning/sampling code changed during fitting. The subsequent visualization-only change enlarged panels. Saved-checkpoint generation and all saved rollout scores were verified after fitting.
+
+The six-panel PNG/PDF uses actual generation snapshots; no illustrative image or synthetic demonstration was substituted. The initial window-only failed run remains preserved. See the [final report](results/phase1_report.md) and [manifest](results/phase1_baseline.json). All four Phase 1 tickets are complete; Phase 2 has not begun. Earlier missing-data and six-test statements above are chronological records of the first ticket, not current blockers.
