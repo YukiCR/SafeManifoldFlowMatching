@@ -59,6 +59,8 @@ Reference check: SAD-Flower Remark 4.1 explicitly holds the initial state fixed 
 
 RFMP Section IV-A generates an action horizon, and SAD-Flower Sections 3–5 generate complete state/action trajectories. Our direction sequences can serve as planned states or desired-direction commands. Their role must be stated explicitly; a manifold-valued action need not be an angular velocity. [RFMP/SRFMP](https://arxiv.org/html/2412.10855v3#S4.SS1), [SAD-Flower](https://arxiv.org/html/2511.05355v3#S3)
 
+The [LASA implementation review](docs/references/lasa_implementation_comparison.md) further distinguishes paper-reported choices from inspected source. Original LASA RFMP and its diffusion comparison generate position-valued short chunks conditioned on observation history, then replan. Our complete-sequence formulation is an explicit adaptation. The reviewed LASA evidence does not establish hard start-and-goal pinning as RFMP's convention; the proposed boundary constraints follow our planning objective and SAD-Flower. Endpoint approval remains pending.
+
 ## Proposed model and manifold geometry
 
 Construct RFM training interpolations coordinatewise using sphere geodesics. Sum component errors using the product Riemannian metric. A small sequence-aware model produces one tangent vector per generated waypoint, with each output projected into that waypoint's tangent space:

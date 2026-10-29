@@ -26,5 +26,6 @@ Research notes:
 
 - [Flow matching and stable policy paper](docs/references/flow_matching_and_stability.md).
 - [SAD-Flower and geometric CBF paper](docs/references/manifold_safety_references.md).
+- [LASA FM/diffusion implementation decisions and evidence limits](docs/references/lasa_implementation_comparison.md).
 
 The research notes distinguish paper results, source availability and our proposed adaptations. They are not evidence of completed applicant project experience.
