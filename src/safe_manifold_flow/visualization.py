@@ -16,7 +16,7 @@ def _sphere(axis):
                       np.cos(latitude), color="#bdbdbd", alpha=0.18, linewidth=0, shade=True,
                       zorder=0)
     axis.set(xlim=(-1.03,1.03), ylim=(-1.03,1.03), zlim=(-1.03,1.03))
-    axis.set_box_aspect((1,1,1))
+    axis.set_box_aspect((1,1,1), zoom=1.45)
     axis.set_proj_type("ortho")
     axis.view_init(elev=90, azim=-90)
     axis.set_axis_off()
