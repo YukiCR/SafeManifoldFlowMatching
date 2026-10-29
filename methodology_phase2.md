@@ -20,31 +20,40 @@ Both the nominal field and correction belong to the product tangent space. Prese
 
 After generation, check every direction in its RFMP execution portion against the actual requested cone before advancing. If that portion passes, it advances the position-command rollout; update observation history and repeat. If any direction in that portion is unsafe, reject the entire portion, keep the last accepted direction and count a failed rollout. The virtual correction `U` is not a physical angular velocity or torque command.
 
-## Barrier and minimum-change correction
+## Selected geometric CBF in body coordinates
 
-For unit forbidden direction `c` and physical exclusion half-angle `theta`, define
-
-```text
-h_i = cos(theta) - c^T x_i,
-P_i = I - x_i x_i^T,
-a_i = grad_S² h_i = -P_i c.
-```
-
-Thus `h_i>=0` means the generated direction lies outside the forbidden cone. At each controlled generation step, solve
+The applicant selected the SO(3)/SO(2) horizontal-frame filter. Keep RFMP direction-valued, represent each generated direction by `x_i=R_i e3`, and use the normalized metric `g_R(R hat(u),R hat(v))=u^T v`. For unit forbidden direction `c`, requested angle `theta` and approved expanded angle `theta_int=theta+delta`, define
 
 ```text
-minimize_U  (1/2) sum_i ||U_i||²
-subject to a_i^T (V_i + U_i) >= -phi(s) h_i,
-           U_i in T_(x_i) S².
+h_actual,i = cos(theta) - c^T R_i e3,
+h_i = cos(theta_int) - c^T R_i e3,
+b_i = -e3 × (R_i^T c),
+Omega_theta,i = R_i^T(x_i × v_theta,i),
+grad h_i(R_i) = R_i hat(b_i),
+dh_i/ds = b_i^T Omega_i.
 ```
 
-One cap and independent tangent corrections make the constraints separable. For nonzero `a_i`, the exact minimum-norm solution is
+During the controlled interval, solve exactly the selected minimum-change problem:
 
 ```text
-U_i = max(0, -(a_i^T V_i + phi(s) h_i)/||a_i||²) a_i.
+minimize_(Omega_i in R³) (1/2) ||Omega_i-Omega_theta,i||²
+subject to b_i^T Omega_i >= -phi(s)*h_i.
 ```
 
-Although this correction is separable, the learned nominal field still sees the joint chunk. This formulation uses no correction-speed bound and establishes no physical actuator feasibility. Its derivation follows the [geometric CBF framework](https://arxiv.org/abs/2510.20202v1); the terminal-recovery schedule follows [SAD-Flower, Section 5](https://arxiv.org/html/2511.05355v3#S5).
+The problems separate by position. For `b_i!=0`, the closed-form solution and geometric update are
+
+```text
+lambda_i = max(0, (-b_i^T Omega_theta,i-phi(s)*h_i)/||b_i||²),
+Omega_star,i = Omega_theta,i+lambda_i*b_i,
+R_i^+ = R_i exp(ds*hat(Omega_star,i)),
+x_i^+ = R_i^+ e3.
+```
+
+Before activation, bypass the QP and use the nominal rate; enforcing its inequality with `phi=0` would still constrain the flow. At `b_i=0`, keep nominal only when the scalar inequality is already feasible; otherwise report infeasibility. Do not cure this by denominator clipping.
+
+The nominal lift and correction are horizontal (`Omega^T e3=0`), so projection reproduces the round-metric S² tangent filter and exponential-Euler step. The original S² expression is a verification identity, not a second selected algorithm. Frame initialization has no global smooth section; retain an initial local/branched frame and propagate it within generation. Horizontal motion means zero instantaneous axial spin, not globally zero roll. No SO(3) roll training or new SO(3) prior is introduced. These virtual rates are not physical angular-velocity commands or torques.
+
+Although filtering separates by position, the learned nominal field still sees the joint chunk. This formulation uses no correction-speed bound and establishes no physical actuator feasibility. Its derivation follows the [geometric CBF framework](https://arxiv.org/abs/2510.20202v1); the schedule follows [SAD-Flower, Section 5](https://arxiv.org/html/2511.05355v3#S5). See the [complete core method](methodology.md) for the metric, quotient, equivalence proof and limitations.
 
 ## Terminal recovery and finite-step behavior
 
@@ -83,4 +92,4 @@ Use terminal goal error as an outcome, not as a hard safety constraint or an imp
 
 The intended result concerns **sampled directions returned by the generator and the discrete position-command rollout**. Connecting arcs, including the connection from the supplied current direction to the next command, can remain unsafe. No dynamic-consistency, physical tracking or torque-level guarantee is claimed. The supplied initial direction cannot be retroactively repaired by filtering future generated positions.
 
-**Approved decisions:** retain RFMP's position-chunk horizons, observation conditioning and replanning loop; steer FM generation using the frozen Phase 1 model; use a slightly expanded internal cap and measure actual-cone safety; stop and count failure when the next execution portion is unsafe. Do not replace the sampler with a separate complete-trajectory model. The concrete proposal uses one static cap and paired generation/rollout evaluation as described above. Overall proposal review precedes the specification, which must fix numerical values, scenario construction and acceptance thresholds. No implementation, tests or experiments have been started.
+**Approved decisions:** retain RFMP's position-chunk horizons, observation conditioning and replanning loop; use the selected body-coordinate QP with `b_i=-e3×(R_i^T c)` on a horizontal frame lift of the frozen model; use a slightly expanded internal cap and measure actual-cone safety; stop and count failure when the next execution portion is unsafe. Do not replace the sampler with a separate complete-trajectory model. The proposal is approved, but specification and tickets remain explicitly on hold for method review. No implementation, tests or experiments have been started.

@@ -98,6 +98,8 @@ SRFMP is outside the selected Phase 1 reproduction and is not a mandatory additi
 
 ## Generation-time geometric CBF layer
 
+**Selected-filter update:** the applicant selected the body-coordinate QP `min_(Omega_i) (1/2)||Omega_i-Omega_theta,i||²` subject to `b_i^T Omega_i>=-phi(s)h_i`, with `b_i=-e3×(R_i^T c)`, `h_i=cos(theta_int)-c^T R_i e3`, and `Omega_theta,i=R_i^T(x_i×v_theta,i)`. Use the normalized SO(3) metric and horizontal auxiliary frame, preserving the S² RFMP model. The canonical derivation and geometric update are in [methodology.md](methodology.md). The S² formulas below are its equivalent projected description, not an alternative selected filter. Numerical settings and frame initialization remain unresolved; specification and implementation remain on hold.
+
 The generated sequence follows
 
 ```text
