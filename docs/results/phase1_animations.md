@@ -4,13 +4,13 @@
 
 Each MP4 shows an entire 200-direction rollout, including all **50 replanning cycles**, in about **98 seconds** at **1280×800, 24 fps**. The first cycle is slower to explain the method. All three new runs pass the unchanged Phase 1 quality thresholds; they are additional visualizations, not a replacement for the frozen 35-rollout evaluation.
 
-## Watch locally
+## Videos
 
-- [Video 1 — seed 101](../../runs/phase1-context-expanded/viz/rollout_01_seed_101.mp4)
-- [Video 2 — seed 202](../../runs/phase1-context-expanded/viz/rollout_02_seed_202.mp4)
-- [Video 3 — seed 303](../../runs/phase1-context-expanded/viz/rollout_03_seed_303.mp4)
+- [Video 1 — seed 101](videos/rollout_01_seed_101.mp4)
+- [Video 2 — seed 202](videos/rollout_02_seed_202.mp4)
+- [Video 3 — seed 303](videos/rollout_03_seed_303.mp4)
 
-The generated videos and exact snapshot records live in the ignored local directory `runs/phase1-context-expanded/viz/`. They must be regenerated or supplied separately after cloning. The renderer, explanation and summary manifest are tracked. No remote publication was performed.
+The three MP4s are included in `docs/results/videos/`. Exact snapshot records and original render outputs remain in the ignored local directory `runs/phase1-context-expanded/viz/`; those records must be regenerated or supplied separately after cloning. The renderer, explanation, summary manifest and comparison below are also tracked.
 
 ![Stages of an actual generation solve](phase1_animation_storyboard.png)
 
@@ -31,6 +31,24 @@ Orange shows the seven recorded LShape curves as display references only, never 
 | 3 | 303 | 2.258° | 1.062° | 2.609° | Pass |
 
 The same seven-recording/window-overlap limitations apply as in the [baseline report](phase1_report.md). The three videos are different noise/context realizations, not independent training runs or new held-out demonstrations. There is no safety filter or hardware experiment.
+
+## Why the three trajectories look similar
+
+They are distinct outputs from 150 distinct source draws, using different context indices in 48 of the 50 replans for each pair. The same starting pair and first-solve condition are used in all three videos. Only one closely related motion family, LShape, is learned; new noise does not request a different route family.
+
+![Shared trajectory overlay and spherical separation](trajectory_comparison.png)
+
+The left panel uses the fixed north-pole logarithm chart for display. The other panels measure actual spherical geodesic distances, rather than subtracting ambient coordinates. The two identical bootstrap directions are excluded from the full-rollout statistics.
+
+| Seeds | Mean separation at matching indices | Largest separation | Symmetric nearest-point mean |
+| --- | ---: | ---: | ---: |
+| 101 vs 202 | 2.067° | 4.581° | 0.825° |
+| 101 vs 303 | 2.776° | 6.430° | 0.608° |
+| 202 vs 303 | 1.289° | 2.445° | 0.374° |
+
+Matching-index separation includes progress/timing differences. The nearest-point statistic compares curve proximity without requiring matching indices; it is not a general trajectory-diversity score. In the first solve, the three source pairs are 26.46–47.72° apart; their generated eight-position chunks end only 0.28–0.72° apart on average. These three widely separated sources are transported to nearby conditional chunks.
+
+This similarity is consistent with the current reproduction task and is not a duplicated-output bug. It does **not** establish calibrated uncertainty, multimodal coverage or the absence of learned averaging. Three draws cannot validate those properties. See [exact comparison data](trajectory_similarity.json). All analysis uses already saved arrays; no model training, new sampling or changes to the frozen baseline were performed.
 
 ## Fidelity checks
 

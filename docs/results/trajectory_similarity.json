@@ -1,0 +1,98 @@
+{
+  "same_bootstrap": true,
+  "same_first_condition": true,
+  "three_distinct_output_arrays": true,
+  "distinct_source_points": 150,
+  "generated_positions_compared": 198,
+  "pairs": [
+    {
+      "seeds": [
+        101,
+        202
+      ],
+      "mean_same_index_deg": 2.066813072443908,
+      "median_same_index_deg": 1.754989802702686,
+      "max_same_index_deg": 4.5813846381280445,
+      "final_separation_deg": 0.4589343082792348,
+      "symmetric_nearest_point_mean_deg": 0.8252762470730273,
+      "main_view_mean_pixel_separation": 8.297898922365265,
+      "main_view_max_pixel_separation": 18.924003671610404,
+      "matching_source_points": 0,
+      "different_context_indices": 48,
+      "first_solve_separation_by_generation_time": {
+        "0.0": {
+          "mean_waypoint_separation_deg": 47.72219067390356,
+          "max_waypoint_separation_deg": 47.72219067390356
+        },
+        "0.5": {
+          "mean_waypoint_separation_deg": 24.30026556305143,
+          "max_waypoint_separation_deg": 24.936456630488994
+        },
+        "1.0": {
+          "mean_waypoint_separation_deg": 0.7211944495491766,
+          "max_waypoint_separation_deg": 1.1230010402018111
+        }
+      }
+    },
+    {
+      "seeds": [
+        101,
+        303
+      ],
+      "mean_same_index_deg": 2.776252736128648,
+      "median_same_index_deg": 2.417052097290263,
+      "max_same_index_deg": 6.430357727927673,
+      "final_separation_deg": 0.8854854387073842,
+      "symmetric_nearest_point_mean_deg": 0.6080585918053503,
+      "main_view_mean_pixel_separation": 11.317694213077065,
+      "main_view_max_pixel_separation": 27.046892627619304,
+      "matching_source_points": 0,
+      "different_context_indices": 48,
+      "first_solve_separation_by_generation_time": {
+        "0.0": {
+          "mean_waypoint_separation_deg": 26.4601044672957,
+          "max_waypoint_separation_deg": 26.4601044672957
+        },
+        "0.5": {
+          "mean_waypoint_separation_deg": 14.036175235396271,
+          "max_waypoint_separation_deg": 14.28013371649397
+        },
+        "1.0": {
+          "mean_waypoint_separation_deg": 0.2806107217150165,
+          "max_waypoint_separation_deg": 0.41713876505014047
+        }
+      }
+    },
+    {
+      "seeds": [
+        202,
+        303
+      ],
+      "mean_same_index_deg": 1.2893012557542414,
+      "median_same_index_deg": 1.4680338776740485,
+      "max_same_index_deg": 2.445307403674295,
+      "final_separation_deg": 0.6302451649850174,
+      "symmetric_nearest_point_mean_deg": 0.37364200272607556,
+      "main_view_mean_pixel_separation": 5.142047825172914,
+      "main_view_max_pixel_separation": 9.7339230659519,
+      "matching_source_points": 0,
+      "different_context_indices": 48,
+      "first_solve_separation_by_generation_time": {
+        "0.0": {
+          "mean_waypoint_separation_deg": 27.625264328278643,
+          "max_waypoint_separation_deg": 27.625264328278643
+        },
+        "0.5": {
+          "mean_waypoint_separation_deg": 16.027689385227298,
+          "max_waypoint_separation_deg": 16.357039581385827
+        },
+        "1.0": {
+          "mean_waypoint_separation_deg": 0.5656869798233286,
+          "max_waypoint_separation_deg": 0.9290752963136504
+        }
+      }
+    }
+  ],
+  "recording_mean_pairwise_same_index_deg": 4.335743891605988,
+  "note": "All comparisons use existing stored runs; no training or new sampling. Recording diversity is descriptive, not a conditional calibration test."
+}

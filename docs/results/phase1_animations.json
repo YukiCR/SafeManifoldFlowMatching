@@ -174,5 +174,22 @@
       }
     ]
   },
-  "frozen_baseline_preserved": true
+  "frozen_baseline_preserved": true,
+  "repository_exports": [
+    {
+      "path": "docs/results/videos/rollout_01_seed_101.mp4",
+      "sha256": "7d1d26663ad5919085a52b1d11976e16c9e45f6051a1f71fae2f9efc50af494a",
+      "bytes": 3276775
+    },
+    {
+      "path": "docs/results/videos/rollout_02_seed_202.mp4",
+      "sha256": "adee5fc88c4c13d8b5072b4a4b3565eec3c122c6c177bb45fe37266ecf84e82f",
+      "bytes": 3288032
+    },
+    {
+      "path": "docs/results/videos/rollout_03_seed_303.mp4",
+      "sha256": "2eae5f786e8d3d0eea97ad440847330cc88b2422f02bf21411bbf94ca96b6f62",
+      "bytes": 3292830
+    }
+  ]
 }
