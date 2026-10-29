@@ -18,6 +18,8 @@ Approved design choices so far:
 
 The Phase 1 method and documented RFMP settings are selected. Do not add hard start/goal pinning, a new sequence architecture or mandatory SRFMP to that reproduction. Undocumented preprocessing/split details and Phase 2 scope remain to be resolved. Overall proposal approval and the specification/tickets/TDD stages remain pending. See the [provisional proposal](proposal.md).
 
+Phase 1's method design is settled; its remaining reproduction details will be explicit in the specification. The [Phase 2 methodology draft](methodology_phase2.md) proposes steering the same RFMP chunks, with barrier equations, terminal-recovery handling, evaluation and failure accounting. It is ready for design discussion; its pending choices are not approved by the draft's existence.
+
 The [data-source comparison](data_options.md) records the alternatives and the selection of LASA LShape. Its small number of independent demonstrations limits the conclusions of the initial trial.
 
 The Git root is `application/SafeManifoldFlowMatching/`; `application/project/` remains a compatibility symlink. Raw/processed datasets, checkpoints and run artifacts are ignored by default. The current repository contains planning documents only. The GitHub remote is https://github.com/YukiCR/SafeManifoldFlowMatching.git. Local setup and remote publication status are verified separately.
