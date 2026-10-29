@@ -55,6 +55,8 @@ X_s = [x_0(s), x_1(s), ..., x_H(s)],       x_i(s) in S².
 
 Recommend fixing `x_0=x_start` and `x_H=x_goal` and generating only the interior sequence on `(S²)^(H-1)`. Endpoint conditioning/pinning is a proposed design choice to confirm. It establishes planned endpoints, not physical closed-loop convergence.
 
+Reference check: SAD-Flower Remark 4.1 explicitly holds the initial state fixed during generation; its Maze2d setup in Appendix F conditions on **both start and goal**. The released conditioning helper sets the specified state coordinates, and its ODE solvers zero their generation derivatives. This supports the proposed two-endpoint planning formulation. RFMP instead generates an observation-conditioned action horizon without the same explicit endpoint-pinning construction. The project decision is still pending. [SAD-Flower Appendix F](https://arxiv.org/html/2511.05355v3#A6), [conditioning helper](https://github.com/TzuYuan107/sad-flower/blob/main/gflower/models_flow/flow_matcher.py), [conditioned solvers](https://github.com/TzuYuan107/sad-flower/blob/main/gflower/models_flow/flow_policy.py).
+
 RFMP Section IV-A generates an action horizon, and SAD-Flower Sections 3–5 generate complete state/action trajectories. Our direction sequences can serve as planned states or desired-direction commands. Their role must be stated explicitly; a manifold-valued action need not be an angular velocity. [RFMP/SRFMP](https://arxiv.org/html/2412.10855v3#S4.SS1), [SAD-Flower](https://arxiv.org/html/2511.05355v3#S3)
 
 ## Proposed model and manifold geometry

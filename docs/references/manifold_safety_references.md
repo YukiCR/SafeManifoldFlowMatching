@@ -13,6 +13,14 @@ Research checked 29 October 2026. This is a design note, not implementation appr
 
 **Source supplied by applicant:** Huang et al., *SAD-Flower: Flow Matching for Safe, Admissible, and Dynamically Consistent Planning*, arXiv:2511.05355v3, 7 June 2026, 24 pages. The local PDF header matches the current v3 metadata. [Paper](https://arxiv.org/abs/2511.05355v3).
 
+### Endpoint conditions: additional source check
+
+Remark 4.1 explicitly conditions the initial trajectory state and holds its generation derivative at zero. Appendix F's Maze2d paragraph additionally states that the model is conditioned on both start and goal. These are task-dependent choices; the generic formulation and locomotion experiments should not be described as universally pinning a goal. [Remark 4.1](https://arxiv.org/html/2511.05355v3#S4), [Appendix F](https://arxiv.org/html/2511.05355v3#A6).
+
+The author repository's `apply_conditioning` assigns the supplied state values at specified horizon indices. `ConditionedODESolver` and `CBFCLFODESolver.ode_func` zero the derivatives at conditioned indices, including after adding guidance, so supplied conditions stay fixed during generation. [Helper definition](https://github.com/TzuYuan107/sad-flower/blob/main/gflower/models_flow/flow_matcher.py), [ODE solver source](https://github.com/TzuYuan107/sad-flower/blob/main/gflower/models_flow/flow_policy.py). These files were inspected read-only; no code was executed.
+
+For the proposed LShape planning task, fixing start/goal is therefore aligned with the Maze2d-style boundary-conditioned construction. RFMP's observation-conditioned action chunks are different: Section IV-A/Algorithm 1 generates a horizon from a prior and executes its first actions, without specifying this same pair of clamped endpoints. [RFMP Section IV-A](https://arxiv.org/html/2412.10855v3#S4.SS1). The recommendation does not itself constitute applicant approval of the endpoint design.
+
 ### What its controlled system is
 
 Sections 3–5 distinguish two indices. A physical plan is `τ = {(s(k), a(k))}_{k=0}^{H-1}` with dynamics `s(k+1)=f(s(k),a(k))`. The generative ODE evolves the **entire** plan in flow time `t∈[0,1]`:
