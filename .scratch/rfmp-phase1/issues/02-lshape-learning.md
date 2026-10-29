@@ -14,3 +14,5 @@
 ## Comments
 
 Applicant approved this ticket and its test interfaces. See the parent specification and ticket plan.
+
+Ticket 01 is complete. Remaining external blocker: no official LShape MAT file is available locally; shell GitHub download failed. Expected local input: data/raw/LShape.mat. No fabricated replacement data will be used.

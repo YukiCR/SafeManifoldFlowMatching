@@ -6,3 +6,5 @@ order. Publish one file per approved ticket, never a combined issues file.
 Each ticket records its Status, immediate Blocked by edges and acceptance criteria.
 Append discussion under Comments. Fetch a ticket by reading that file.
 Publishing means writing these local files; no GitHub issue creation is implied.
+
+Keep triage Status separate from execution Progress. A ticket with Progress: completed is finished and skipped when selecting the frontier; its dependents can start when their remaining blockers are satisfied.

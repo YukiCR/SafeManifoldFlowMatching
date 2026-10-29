@@ -5,12 +5,15 @@
 **Blocked by:** None — can start immediately.
 
 **Status:** ready-for-agent
+**Progress:** completed
 
-- [ ] Known great-circle points and velocities match independent analytical values.
-- [ ] Prescribed tangent-flow integration returns the known target while staying on the product sphere.
-- [ ] Coincidence and cut-locus/invalid-input behavior are explicit.
-- [ ] Red-before-green evidence is recorded at the approved sphere geometry interface.
+- [x] Known great-circle points and velocities match independent analytical values.
+- [x] Prescribed tangent-flow integration returns the known target while staying on the product sphere.
+- [x] Coincidence and cut-locus/invalid-input behavior are explicit.
+- [x] Red-before-green evidence is recorded at the approved sphere geometry interface.
 
 ## Comments
 
 Applicant approved this ticket and its test interfaces. See the parent specification and ticket plan.
+
+Completed via six red–green cycles. The complete six-test suite passed; see the Phase 1 TDD log. These are analytical test fixtures, not a learned motion benchmark.

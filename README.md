@@ -1,8 +1,8 @@
 # SafeManifoldFlowMatching
 
-**Final direct-S² audit passed. Phase 1 specification and ticket drafts are ready for review; TDD awaits the agreed ticket/test-interface approval.** Start with the consolidated [core methodology](methodology.md). The applicant requires grilling → approved proposal → specification → approved tickets → TDD. Maximum project time is 18 hours, with headroom for the 30 October application.
+**Final direct-S² audit passed. Phase 1 specification, four tickets, local workflow and the two test interfaces are approved. Ticket 01 is complete; ticket 02 is blocked by the missing official LShape MAT file.** Start with the consolidated [core methodology](methodology.md). The applicant requires grilling → approved proposal → specification → approved tickets → TDD. Maximum project time is 18 hours, with headroom for the 30 October application.
 
-The previous chain results and obsolete agent-created implementation were deleted on 29 October 2026. No new project code, tests, demonstrations, training or experiments have been created or run.
+The previous chain results and obsolete agent-created implementation were deleted on 29 October 2026. Phase 1 sphere geometry and analytical test fixtures are implemented. Six tests pass. No real LASA preparation, model training, learned checkpoint, motion-reproduction benchmark or Phase 2 implementation has occurred.
 
 Approved design choices so far:
 
@@ -20,7 +20,7 @@ The Phase 1 method, documented RFMP settings and Phase 2 chunk/replanning struct
 
 Phase 1's method design is settled; its remaining reproduction details will be explicit in the specification. The [Phase 2 methodology draft](methodology_phase2.md) records the approved chunk/replanning structure and internal angular safety margin: filter against a slightly expanded forbidden cone, evaluate against the actual cone. The margin magnitude, numerical settings and measurable evaluation thresholds remain specification items.
 
-The applicant selected **stop on an unsafe next execution portion**: reject that portion before advancing, retain the last accepted direction and count a rollout failure. No fresh-noise retries. The filter still constrains the complete prediction horizon; unused-tail violations are reported separately. The three [standalone reviews are complete](docs/reviews/README.md), with factual clarifications and numerical risks recorded. The [final direct-S² audit](docs/reviews/final_s2_audit.md) passed. Review the [Phase 1 spec draft](.scratch/rfmp-phase1/spec.md) and [ticket/test-interface plan](.scratch/rfmp-phase1/ticket_plan.md); TDD follows their approval.
+The applicant selected **stop on an unsafe next execution portion**: reject that portion before advancing, retain the last accepted direction and count a rollout failure. No fresh-noise retries. The filter still constrains the complete prediction horizon; unused-tail violations are reported separately. The three [standalone reviews are complete](docs/reviews/README.md), with factual clarifications and numerical risks recorded. The [final direct-S² audit](docs/reviews/final_s2_audit.md) passed. The [Phase 1 specification](.scratch/rfmp-phase1/spec.md) and [ticket/test-interface plan](.scratch/rfmp-phase1/ticket_plan.md) are approved. Progress and red–green evidence are in the [TDD log](docs/phase1_tdd_log.md).
 
 The follow-up [manifold implementation audit](docs/reviews/manifold_implementation_audit.md) reads the geometric-CBF controller/dynamics source and official RFM geometry code. The method now explicitly states its product manifold, tangent bundle, round metric, intrinsic training/filter interpretation and geometric diagnostics. The satellite reference is a mechanical SO(3) system; our approved scope remains a first-order generator on a product of S² factors.
 
@@ -38,4 +38,16 @@ Research notes:
 
 The research notes distinguish paper results, source availability and our proposed adaptations. They are not evidence of completed applicant project experience.
 
-Phase 1 environment checks found a working existing scientific Python environment with CPU execution and torch.func.jvp; CUDA is unavailable. No real LShape MAT file was found locally and shell download failed. This blocks real-data learning, not the first approved geometry ticket. No project tests or implementation have started.
+Phase 1 environment checks found a working existing scientific Python environment with CPU execution and torch.func.jvp; CUDA is unavailable. No real LShape MAT file was found locally and shell download failed. This blocks real-data learning, not the first approved geometry ticket. Ticket 01 is implemented and tested; real-data learning remains blocked.
+
+## Phase 1 development
+
+The approved interfaces are sphere geometry and the Phase 1 study. Current implementation covers sphere exp/log, geodesic/JVP targets and factorwise exponential-Euler integration with explicit invalid-point/tangent/cut-locus errors.
+
+Run the current tests from this repository:
+
+```bash
+/home/chengrui/miniconda3/envs/latentSafety/bin/python -m pytest -q
+```
+
+Place the official LShape MAT file at `data/raw/LShape.mat` to unblock the real-data ticket. Raw records and generated artifacts are ignored by Git. Geometry test success is not evidence of successful motion learning.
