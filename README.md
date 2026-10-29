@@ -20,7 +20,7 @@ The Phase 1 method, documented RFMP settings and Phase 2 chunk/replanning struct
 
 Phase 1's method design is settled; its remaining reproduction details will be explicit in the specification. The [Phase 2 methodology draft](methodology_phase2.md) records the approved chunk/replanning structure and internal angular safety margin: filter against a slightly expanded forbidden cone, evaluate against the actual cone. The margin magnitude, numerical settings and measurable evaluation thresholds remain specification items.
 
-The applicant selected **stop on an unsafe next execution portion**: reject that portion before advancing, retain the last accepted direction and count a rollout failure. No fresh-noise retries. The filter still constrains the complete prediction horizon; unused-tail violations are reported separately. Standalone mathematical, RFMP-fidelity and practical reviews are in progress. Applicant review of [methodology.md](methodology.md) precedes any specification or tickets.
+The applicant selected **stop on an unsafe next execution portion**: reject that portion before advancing, retain the last accepted direction and count a rollout failure. No fresh-noise retries. The filter still constrains the complete prediction horizon; unused-tail violations are reported separately. The three [standalone reviews are complete](docs/reviews/README.md), with factual clarifications and numerical risks recorded. Applicant review of [methodology.md](methodology.md) precedes any specification or tickets.
 
 The [data-source comparison](data_options.md) records the alternatives and the selection of LASA LShape. Its small number of independent demonstrations limits the conclusions of the initial trial.
 

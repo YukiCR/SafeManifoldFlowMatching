@@ -1,6 +1,6 @@
 # SafeManifoldFlowMatching: core methodology for review
 
-29 October 2026. **Proposal approved; methodology now under standalone-agent and applicant review. Specification and tickets are explicitly on hold.** No project code, tests, dataset preparation, model training or experiments have been performed. This document consolidates the current method so it can be reviewed without reconstructing the discussion.
+29 October 2026. **Proposal approved; three standalone reviews complete; applicant methodology review pending. Specification and tickets are explicitly on hold.** No project code, tests, dataset preparation, model training or experiments have been performed. This document consolidates the method and factual clarifications from review. See the [review summary and reports](docs/reviews/README.md).
 
 ## 1. Purpose and scope
 
@@ -12,7 +12,7 @@ Demonstrate learning, manifold geometry, safety control and robotics through a s
 - No physical robot, full SO(3), torque dynamics, learned dynamics model, dynamic-consistency CLF, hard goal pinning or mandatory SRFMP.
 - **At most 18 hours including preparation**, with the approved project hard stop of **30 October 2026, 09:45 China time**, or earlier if the budget is exhausted. Preserve application preparation time before the 30 October deadline.
 
-Core evidence will be a reproducible nominal baseline, the safety extension, paired evaluation, visualizations and a short explanation of derivations, failures and limitations. An incomplete or unsuccessful experiment must remain described as such.
+Intended evidence comprises a reproducible nominal baseline, the safety extension, paired evaluation, visualizations and an explanation of derivations, failures and limitations. The time budget is a ceiling, not a promise that both phases will succeed. If Phase 1 does not validate, stop rather than building Phase 2 on an unvalidated model. An incomplete or unsuccessful experiment must remain described as such.
 
 ## 2. References and division of roles
 
@@ -43,9 +43,9 @@ After sampling, advance through the initial execution portion, update the observ
 | Item | Paper-reported choice to inherit |
 | --- | --- |
 | Data | Seven recordings per family; use LShape only; represent each recording with 200 ordered time steps |
-| Observation/context | Reference observation `o_(τ-1)`, earlier context `o_c`, separation `τ-c`; sample `c` from the paper's earlier-history range |
-| Horizons | Prediction horizon 8; execution horizon half; point-count versus transition-count indexing remains to be made explicit |
-| Sphere prior | Wrapped Gaussian centered at the north pole, reported scale σ=0.5; repeat one sampled point over the chunk |
+| Observation/context | `[o_(τ-1), o_c, τ-c]`, with `c ~ Uniform{1,...,τ-2}`, paired with the same recording/history and prediction index; sample context once per generation solve |
+| Horizons | Reported prediction horizon 8; execution horizon half. Inclusive displayed vectors suggest 9/5 positions, while execution prose says the first 4 actions. Exact arrays/indices remain unresolved, not verified as 8/4 lengths |
+| Sphere prior | Wrapped Gaussian centered at the north pole, reported parameter σ=0.5 in `σI`; repeat one sampled point over the chunk. Covariance versus standard-deviation convention remains unresolved |
 | Training paths | Coordinatewise sphere geodesics between source and demonstrated chunks |
 | Network | MLP, reported five layers and 64 hidden units; Swish with learnable parameter |
 | Optimization | Adam, learning rate 1e-4; EMA decay 0.999; 200 epochs; best validation model |
@@ -59,13 +59,13 @@ Do not substitute an analytic goal-attraction field for learning, independent no
 
 ### Reproduction gaps, not invented facts
 
-The precise planar normalization/sphere embedding, split unit, MLP layer-count convention, rollout bootstrap/context handling, terminal padding and integration resolution are not yet resolved. These need explicit later choices, supported by sources where available. **No specification values are selected by this document.**
+The precise planar normalization/sphere embedding, split unit, horizon arrays, Gaussian parameter convention, MLP input shapes/layer counting, batching/epoch definition, validation/EMA-checkpoint handling, rollout bootstrap/context handling, terminal padding and integration resolution are unresolved. The paper's MLP input prose omits the evolving action state despite its field equations; retain the state-dependent `V(s,X|o)` formulation rather than silently dropping `X`. Later rollout observations/context must come from generated history, not future demonstration positions. These need explicit later choices, supported by sources where available. **No specification values are selected by this document.**
 
 Seven recordings can produce many overlapping chunks/context pairs but remain seven independent human demonstrations. An exact 80/10/10 whole-recording split is impossible with seven recordings. A window split cannot establish held-out-recording generalization; a grouped-recording split would be a disclosed change from the reported percentages. Do not assume augmentation or share transformed raw datasets without checking provenance and terms.
 
 ### Baseline preservation
 
-Validate motion learning and manifold adherence before Phase 2. Preserve checkpoint, exact preprocessing and split unit/indices, configuration, inference settings, initial observation histories, random states and baseline outputs. Record hashes and a baseline Git commit. Do not retrain or change preprocessing in the core safety comparison.
+Validate motion learning and manifold adherence before Phase 2: assess finite, valid chunks **and nominal receding-horizon motion**, with reproduction quality, goal progress and adjacent jumps. Low flow-validation loss or good teacher-conditioned chunks alone do not validate an autonomous rollout. Exact measures/thresholds remain unresolved. Preserve checkpoint, exact preprocessing and split unit/indices, configuration, inference settings, initial observation histories, random states and baseline outputs. Record hashes and a baseline Git commit. Do not retrain or change preprocessing in the core safety comparison.
 
 ## 5. Phase 2: generation-time safety steering
 
@@ -115,11 +115,11 @@ This is our specialization of geometric CBF machinery to RFMP generation, not an
 
 ### Terminal recovery and its limits
 
-Retain the Phase 1 prior **without excluding unsafe cone samples**. Intermediate candidates may be unsafe. Follow SAD-Flower's nominal initial generation interval and controlled later interval; its reference schedule is `phi(s)=gamma/(1-s)^2`. Activation, gain, numerical stopping and integration settings are unresolved.
+Retain the Phase 1 prior **without excluding unsafe cone samples**. Intermediate candidates may be unsafe. Follow SAD-Flower's nominal initial generation interval and controlled later interval; its reference schedule is `phi(s)=gamma/(1-s)^2`, `gamma>0`. Activation, gain, numerical stopping and integration settings are unresolved.
 
 The intended constraint objective concerns positions at the end of generation. For an unsafe initial barrier, the equality solution `h(s)=h(s_on) exp(-integral(phi))` can stay negative at every `s<1` and only approach zero at the singular endpoint. Do not evaluate that singular gain at `s=1` or claim ideal terminal recovery as an exact finite-step certificate. The internal margin and final check are practical measures, not an automatic numerical theorem.
 
-At the unsafe cap center, `a_i=0` and the recovery inequality can be infeasible. At a zero-gradient safe point, zero correction can be feasible. Handle these branches explicitly; denominator clipping alone does not solve an infeasible constraint. Virtual correction is unbounded in the ideal formulation; there is no actuator-feasibility guarantee.
+At the unsafe cap center, `a_i=0` and the recovery inequality can be infeasible. Near that center, at angular distance `r`, correction magnitude can grow approximately as `phi(s)*(1-cos(theta_int))/r` for bounded nominal velocity. Thus near-center ill-conditioning and terminal stiffness are coupled risks even without an exactly degenerate sample. At a zero-gradient safe point, zero correction can be feasible. Handle these branches explicitly; denominator clipping alone does not solve an infeasible constraint. Virtual correction is unbounded in the ideal formulation; there is no actuator-feasibility guarantee. The filter also supplies no tangential detour when the nominal field lacks one, so safe stalls remain possible.
 
 ## 6. Approved stopping rule
 
@@ -137,7 +137,7 @@ Continue to constrain the full chunk. An unused-tail violation is a whole-chunk 
 
 **Receding-horizon rollouts:** use identical initial histories/scenarios and random-seed schedules; later observation histories can diverge after steering. Apply the same execution stopping check to both nominal and steered Phase 2 comparisons. Report completion, goal error/reaching, pre-acceptance violations, stops/stalls, geometry errors and runtime, retaining failures in the denominator. Preserve the original Phase 1 reproduction separately. If safety changes the numerical grid or stopping time, include an unsteered comparison using that same protocol.
 
-Zero unsafe executed points obtained solely by stopping is not evidence that CBF steering improved generation. Do not assess fidelity only on favorable survivors or retain only favorable cone placements. Freeze final scenarios, tuning/evaluation separation and thresholds before the final comparison. Goal reaching is measured, not guaranteed by a CLF or a pinned endpoint.
+Zero unsafe executed points obtained solely by stopping is not evidence that CBF steering improved generation. Distinguish goal-reaching completion from merely exhausting a rollout horizon; retain last-accepted goal error for failures. Do not assess fidelity only on favorable survivors or retain only favorable cone placements. Freeze final scenarios, tuning/evaluation separation and thresholds before the final comparison; the conflicting cap should affect returned waypoints, not only connecting arcs. Goal reaching is measured, not guaranteed by a CLF or a pinned endpoint. Preserve actual source draws or an index-based draw schedule so stopped runs do not shift later pairings.
 
 **Explicit limitations:** safe sampled directions do not ensure safe connecting arcs, including the current-to-next-command connection. There is no continuous-path, tracking, dynamic-consistency, global goal-convergence or torque-feasibility guarantee. LASA embedding and one-family results do not establish deformable-object manipulation or general robotics performance.
 
