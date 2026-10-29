@@ -1,4 +1,4 @@
-# Local environments and caches
+# Environments and caches
 .venv/
 venv/
 __pycache__/
@@ -7,14 +7,25 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+*.egg-info/
+build/
+dist/
 
-# External data and generated experiment artifacts
+# Local datasets, checkpoints and generated runs
 data/
 checkpoints/
 runs/
 artifacts/
 
-# Local configuration
+# Internal preparation records belong to the local private branch
+docs/
+.scratch/
+tools/
+AGENTS.md
+methodology*.md
+proposal.md
+data_options.md
+
 .env
 .env.*
 !.env.example

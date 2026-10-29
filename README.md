@@ -1,62 +1,202 @@
 # SafeManifoldFlowMatching
 
-A small research-preparation project on learning and steering robot pointing directions on **S²**. Phase 1 reimplements the original RFMP paper's LASA method; Phase 2 is a proposed generation-time geometric-CBF extension. The applicant approved the proposal, local specification/tickets and TDD interfaces. The total project budget is at most 18 hours.
+| Flow matching on S² — seed 303 | Safe flow matching on S² — seed 303 |
+| --- | --- |
+| [![Play the FM video](assets/fm_seed_303_preview.png)](assets/fm_seed_303.mp4) | [![Play the safe FM video](assets/safe_fm_seed_303_preview.png)](assets/safe_fm_seed_303.mp4) |
+| [Watch FM generation and replanning](assets/fm_seed_303.mp4) | [Watch nominal versus CBF-guided generation](assets/safe_fm_seed_303.mp4) |
 
-**Phase 1 is complete and frozen:** all **35/35** autonomous rollouts pass the approved gate (mean goal error **1.20°**, mean angular DTW **1.35°**). The official dataset is checked, the 200-epoch all-context model is trained, and the saved checkpoint reproduces its outputs exactly. The first failed run is preserved. **Phase 2 has not started.** See the [results and limitations](docs/results/phase1_report.md), [frozen manifest](docs/results/phase1_baseline.json) and [six-panel PDF](docs/results/flow_transport.pdf).
+We learn short sequences of pointing directions on the sphere, then steer their **generation process** around a forbidden direction. Phase 1 independently implements RFMP's LASA setting [1,2]. Phase 2 combines a geometric CBF [3] with SAD-Flower's virtual-control perspective [4], keeping the trained model frozen.
 
-![Actual spherical FM transport](docs/results/flow_transport.png)
+There are two time axes: **generation time** $s\in[0,1]$ evolves a candidate sequence from noise to a predicted chunk; **rollout index** $k$ advances through accepted directions. Intermediate generation states are not executed.
 
-[Three animated rollout walkthroughs](docs/results/phase1_animations.md) show complete sampling → tangent flow → selection/advancement cycles using the frozen model (seeds 101, 202 and 303). The three MP4s are included under `docs/results/videos/`; the walkthrough also compares their shapes and angular separation.
+## Part 1 — Flow matching on the manifold
 
-Start with the [core methodology](methodology.md), [approved Phase 1 specification](.scratch/rfmp-phase1/spec.md), [tickets](.scratch/rfmp-phase1/ticket_plan.md) and [TDD evidence](docs/phase1_tdd_log.md). Paper details that could not be verified in original author code are explicit reproducibility conventions in the specification.
+The data are seven LASA **LShape** recordings [6], resampled to $N=200$ points and embedded on S² through the north-pole exponential map. A training-derived scale sets the maximum training angular radius to 60°. These are handwriting demonstrations used as a pointing task, rather than recorded robot motions.
 
-## Method
+Each predicted chunk contains eight directions and lies on the product manifold
 
-Each position chunk lies on the product manifold `(S²)^8`, equipped with the product of canonical round metrics. The network predicts a tangent vector at the current chunk; training compares it with the differentiated source-to-data geodesic in that same tangent space. Sampling uses factorwise sphere-exponential Euler updates.
+$$
+\mathcal M=(\mathbb S^2)^8,\qquad
+T_X\mathcal M=\prod_{i=1}^{8}\{v_i\in\mathbb R^3:x_i^\top v_i=0\},\qquad
+g_X(V,W)=\sum_{i=1}^{8}v_i^\top w_i.
+$$
 
-The model predicts eight future positions, executes four, then replans using its own history. Conditioning comprises the current direction, an earlier direction and normalized index separation. Two recorded positions bootstrap each rollout; no future demonstration positions enter subsequent conditioning. There is no hard endpoint pinning or explicit goal input.
+The round metric makes the displayed dot products intrinsic inner products on the tangent spaces. The learned field takes values in the tangent bundle $T\mathcal M$; the 24 stored coordinates represent a 16-dimensional manifold.
 
-The seven real LShape recordings are resampled to 200 points and embedded through the sphere exponential. Training/validation/test partitions contain 1,108/138/140 recording-reference windows. Their underlying recordings overlap: this measures **within-recording reconstruction, not held-out-recording generalization**. The wrapped-Gaussian source uses tangent covariance `0.5 I` and repeats one sampled direction across a chunk.
+### Prior: sample in a tangent plane, then map to S²
 
-Training uses five hidden width-64 layers with learned Swish parameters, Adam at `1e-4`, EMA decay `0.999`, batch size 128 and 200 epochs. Each corrected epoch covers all 109,739 valid training window/context pairs. There are 171,600 optimizer updates; checkpoint selection uses a fixed validation bank. The actual network has 20,317 parameters. Undocumented embedding, indexing, depth and solver choices are recorded in the specification rather than attributed to the authors.
+At the north pole $n=(0,0,1)$, draw a two-dimensional Gaussian tangent and apply the sphere exponential:
 
-## Reproduce Phase 1
+$$
+\xi=(\xi_1,\xi_2,0)\in T_n\mathbb S^2,\qquad
+(\xi_1,\xi_2)\sim\mathcal N(0,0.5I_2),\qquad
+z=\operatorname{Exp}_n(\xi),\qquad X_0=(z,\ldots,z).
+$$
 
-Use Python 3.12 with PyTorch, NumPy, SciPy, Matplotlib and pytest. The measured environment is CPU-only despite a CUDA-enabled PyTorch build. From this repository:
+This is a wrapped-Gaussian prior, with **covariance** $0.5I_2$. One sampled direction is repeated across all eight positions; it is neither a uniform sphere prior nor eight independent draws. Its support is the diagonal of the product manifold.
+
+### Target flow: differentiate the source-to-data geodesic
+
+For a demonstrated future chunk $Y=(y_1,\ldots,y_8)$, interpolate each factor intrinsically:
+
+$$
+x_i(s)=\operatorname{Exp}_z\!\left(s\operatorname{Log}_z(y_i)\right),\qquad
+u_i(s)=\frac{d}{ds}x_i(s)\in T_{x_i(s)}\mathbb S^2.
+$$
+
+We compute this derivative using a Jacobian–vector product (`torch.func.jvp`) through the geodesic. It is the training target velocity at the **current interpolated point**, rather than the initial displacement anchored at $z$. Exact antipodes have no unique shortest-geodesic logarithm and are rejected explicitly.
+
+### Conditioning: current observation and past context
+
+At zero-based rollout index $k$, choose one earlier index $j\in\{0,\ldots,k-1\}$ and hold the condition fixed throughout the generation solve:
+
+$$
+o_k=\left[q_k,\ q_j,\ \frac{k+1-j}{N}\right].
+$$
+
+This is the implementation's seven-value condition: current direction, past direction and normalized index separation. The model also receives generation time $s$ and the evolving chunk $X_s$. There is no explicit goal or obstacle input. Training targets are the next eight recorded directions, repeating the final recorded direction when the horizon extends past the data.
+
+### Receding horizon: predict eight, use four, replan
+
+Two recorded directions bootstrap the rollout. Each cycle draws a new source, generates eight future directions, uses the first four, then conditions the next solve on its **own generated history**. The unused tail is replaced. Fifty solves produce 200 retained directions; the final execution portion contains two directions. No future demonstration observations are supplied after bootstrap, and no endpoint is pinned.
+
+### Training: match tangent velocities with the product metric
+
+A five-hidden-layer MLP of width 64 predicts ambient vectors, then projects each factor into its current tangent space:
+
+$$
+v_{\theta,i}=(I-x_ix_i^\top)f_{\theta,i}(s,X_s,o_k),\qquad
+\mathcal L(\theta)=\mathbb E\!\left[
+\sum_{i=1}^{8}\|v_{\theta,i}-u_i\|_{g_{x_i(s)}}^2\right].
+$$
+
+Both velocities belong to the same tangent fiber, so their difference is geometrically well defined. We sample $s$ uniformly, sum squared errors over the eight factors, and average over the batch.
+
+Training uses Adam at $10^{-4}$, batch size 128, 200 epochs and EMA decay 0.999. Each epoch covers all **109,739 valid training window/context pairs**, giving 171,600 updates. The best EMA checkpoint is selected on a fixed validation bank. The train/validation/test split contains 1,108/138/140 windows; recordings overlap these partitions, so this is **within-recording reconstruction**, without a held-out-recording generalization claim. Undocumented paper details are explicit local reproduction choices.
+
+### Integration: move by the sphere exponential
+
+Sampling solves $dX_s/ds=V_\theta(s,X_s\mid o_k)$ with factorwise exponential Euler:
+
+$$
+x_i^{\ell+1}=\operatorname{Exp}_{x_i^\ell}(\Delta s\,v_{\theta,i}^\ell),\qquad
+\operatorname{Exp}_x(w)=\cos(\|w\|)x+
+\frac{\sin(\|w\|)}{\|w\|}w,
+$$
+
+using the continuous limit at $w=0$. The frozen Phase 1 sampler uses 100 updates from $s=0$ to $1$. This follows sphere geodesics at each step; it is not ambient Euler followed by projection.
+
+![Learned spherical transport at generation times 0, 0.5 and 1](assets/fm_transport.png)
+
+Orange curves are demonstrations; blue points are generated first positions of eight-position chunks. Columns track the same samples. Rows use validation and test conditions, respectively.
+
+## Part 2 — Safe flow matching
+
+### CBF design on S²
+
+For unit forbidden direction $c$, exclude the spherical cap of angular radius $\vartheta=6^\circ$. Its safe side is described by
+
+$$
+h_{\mathrm{actual}}(x)=\cos\vartheta-c^\top x\ge0.
+$$
+
+The filter uses an expanded internal radius $\vartheta_{\mathrm{int}}=7^\circ$ to leave a numerical margin. Under the round metric,
+
+$$
+h(x)=\cos\vartheta_{\mathrm{int}}-c^\top x,\qquad
+a(x)=\operatorname{grad}h(x)=(c^\top x)x-c,\qquad
+dh_x[v]=g_x(a,v)=a^\top v.
+$$
+
+The gradient is tangent to S². All computation stays on S²; no SO(3) lift, frame or roll variable is introduced.
+
+### Virtual flow and the CBF constraint
+
+Following the generation-time control idea of SAD-Flower, add a virtual tangent input to the frozen learned field:
+
+$$
+\frac{dX_s}{ds}=V_\theta(s,X_s\mid o_k)+U_s,\qquad
+U_s\in T_{X_s}\mathcal M.
+$$
+
+$U_s$ changes the candidate chunk, rather than commanding physical angular velocity or torque. For every predicted direction, constrain its generation derivative:
+
+$$
+\frac{dh_i}{ds}=dh_{x_i}[v_i]\ge-\phi(s)h_i,\qquad
+\phi(s)=\frac{0.05}{(1-s)^2}.
+$$
+
+The final protocol **bypasses the QP before $s=0.9$**. Initial noise and intermediate candidates may be unsafe; the intended recovery concerns the returned directions. Setting the gain to zero would not implement this bypass.
+
+### Filter the flow by a metric-minimal QP
+
+For each sphere factor, solve the minimum-change problem in its current tangent fiber:
+
+$$
+\begin{aligned}
+v_i^\star={}&\underset{v_i\in T_{x_i}\mathbb S^2}{\operatorname{argmin}}
+\ \frac12\|v_i-v_{\theta,i}\|_{g_{x_i}}^2,\\
+&\text{subject to}\quad g_{x_i}(a_i,v_i)\ge-\phi(s)h_i.
+\end{aligned}
+$$
+
+For $a_i\ne0$, its closed-form solution is
+
+$$
+v_i^\star=v_{\theta,i}+
+\max\!\left(0,\frac{-g_{x_i}(a_i,v_{\theta,i})-\phi(s)h_i}
+{g_{x_i}(a_i,a_i)}\right)a_i,\qquad
+U_i=v_i^\star-v_{\theta,i}.
+$$
+
+An already feasible nominal field is unchanged. An unsatisfied constraint with zero gradient is infeasible; an active near-zero gradient is reported as ill-conditioned. We do not hide these cases by clipping the denominator. The corrected velocity is integrated with the same sphere exponential as in Phase 1.
+
+### Finite-step sampling and execution acceptance
+
+Both Phase 2 comparators use the same **1,891-update** grid: spacing 0.001 through 0.99, spacing 0.00001 through 0.999, then one final step to 1. Every field/gain evaluation occurs at a left endpoint **strictly below 1**. The geometric state/filter use float64; the frozen network remains float32. A step exceeding 0.1 rad fails explicitly.
+
+The complete next execution portion must clear the **actual 6° cap** before advancing. Otherwise, reject the entire portion, stop at the last accepted direction and count a failed rollout. There is no partial execution, point repair or fresh-noise retry. All eight predicted positions are filtered; unused-tail violations are recorded separately.
+
+The finite grid and internal margin do not establish a terminal-recovery theorem. Connecting arcs can remain unsafe, and neither physical dynamics nor global goal convergence is guaranteed.
+
+## Results
+
+The cap is placed at the L's corner, with both starts and goals outside it; an antipodal cap supplies the no-conflict control. Each evaluation group contains seven recording bootstraps × five noise seeds, retaining failures in the denominator.
+
+| Experiment | Joint success |
+| --- | ---: |
+| Frozen Phase 1 RFMP | **35/35** |
+| Phase 2, corner cap, matched nominal sampler | 5/35 |
+| Phase 2, corner cap, CBF-guided sampler | **34/35** |
+| Phase 2, no-conflict cap | **35/35 for both methods** |
+
+Joint success requires a full rollout, valid geometry, goal error ≤5°, angular DTW ≤10°, maximum adjacent jump ≤20°, and, in Phase 2, safe used directions plus mean demonstration deviation ≤3° outside the 12° obstacle neighborhood. Zero unsafe execution obtained by stopping does not count as successful avoidance.
+
+All 35 guided corner rollouts finish and all 1,750 returned chunks clear the actual cap, including unused tails. One run still fails goal/fidelity thresholds: recording 0, seed 2 has goal error **17.44°** and outside-neighborhood deviation **4.17°**. It is shown below rather than discarded. In 105 matched corner chunks, unsafe proposals fall from **35/105 to 0/105**. There are **37 passing interface tests**.
+
+![Corner rollouts, including the preserved guided failure](assets/safe_fm_results.png)
+
+An earlier development sampler stopped at $s=0.99$ and distorted even the nominal rollouts. Restoring the full horizon fixed that regression. Guidance activation was then delayed using separate development seeds before final evaluation; the model and success thresholds were unchanged.
+
+## Code and reproduction
+
+The core implementation is in [geometry.py](src/safe_manifold_flow/geometry.py), [study.py](src/safe_manifold_flow/study.py), [safety.py](src/safe_manifold_flow/safety.py) and [safety_study.py](src/safe_manifold_flow/safety_study.py). Use Python 3.12 or newer:
 
 ```bash
-# Existing scientific environment used for this study:
-PY=/home/chengrui/miniconda3/envs/latentSafety/bin/python
-$PY -m pytest -q
-
-# Supply the official file at data/raw/LShape.mat, then train and evaluate:
-PYTHONPATH=src $PY -u -m safe_manifold_flow \
-  --data data/raw/LShape.mat --epochs 200 --context-mode all \
-  --output runs/phase1-context-expanded
-
-# Reproduce evaluation/figures without training or overwriting the original run:
-PYTHONPATH=src $PY -u -m safe_manifold_flow \
-  --data data/raw/LShape.mat \
-  --checkpoint runs/phase1-context-expanded/best.pt \
-  --output runs/phase1-reproduced
+python -m pip install -e '.[test]'
+python -m pytest -q
+# Supply the official LShape.mat at data/raw/LShape.mat before training.
+python -m safe_manifold_flow --data data/raw/LShape.mat \
+  --epochs 200 --context-mode all --output runs/rfmp-lshape
 ```
 
-Official input: [LASA LShape.mat](https://raw.githubusercontent.com/epfl-lasa/LASAHandwritingDataset/master/DataSet/LShape.mat). Expected SHA-256: `3aa960ed9241d4651c7e21240d63d616d215d889e08ce780fc7a5b1334474ce9`. Respect the [dataset's attribution and academic-use terms](https://github.com/epfl-lasa/LASAHandwritingDataset). Raw/processed records, checkpoints and run artifacts are ignored by Git and are not redistributed. The repository's compatibility path is `application/project/`.
+The dataset is obtained separately from its official source [6]. Checkpoints and generated runs are excluded from the public package. This study uses one handwriting family and one corner cap; it does not establish performance on unseen recordings, hardware or deformable manipulation. The stable RFMP extension [5] is background, rather than a reproduced component.
 
-The run directory preserves the checkpoint, train-pair enumeration, split indices, fixed validation/test banks, rollout histories and noise draws, evaluation, configuration/code hashes, and actual plotted samples. The requested six-panel figure shows the same samples at generation times 0, 0.5 and 1, with orange recordings and blue generated first positions. Its two rows use validation-window and test-window conditions; they do not compare RFMP and SRFMP. Autonomous rollout quality is evaluated separately over 35 attempts.
+## References
 
-## Phase 2 boundary
-
-The [Phase 2 methodology](methodology_phase2.md) retains the frozen RFMP chunks and replanning loop, adding a minimum-change tangent-velocity CBF filter **inside FM generation**. Everything remains directly on S²: no SO(3) lift, frames or roll variables. The barrier differential and round-metric gradient define the intrinsic QP.
-
-The selected design starts from unconstrained source noise and attempts terminal waypoint recovery, using a slightly expanded internal forbidden cone. Reject an unsafe next execution portion before advancing, stop at the last accepted direction and count the rollout as failed; no fresh-noise retries. Numerical parameters still require specification. Connecting arcs may be unsafe, and dynamic-consistency guarantees are outside scope. A validated, frozen Phase 1 baseline is required before Phase 2 implementation.
-
-## References and audit trail
-
-- [Original RFMP, Braun et al., IROS 2024](https://arxiv.org/abs/2403.10672): inherited LASA chunk-learning method. This is an independent reimplementation with documented paper gaps, not an exact reproduction of unavailable author code.
-- [Flow matching and stable RFMP notes](docs/references/flow_matching_and_stability.md).
-- [LASA implementation comparison](docs/references/lasa_implementation_comparison.md).
-- [SAD-Flower and geometric-CBF notes](docs/references/manifold_safety_references.md).
-- [Standalone methodology reviews](docs/reviews/README.md) and [final direct-S² audit](docs/reviews/final_s2_audit.md).
-
-Older whole-trajectory and SO(3) design records are historical and superseded. Previous chain-project outputs were deleted at the applicant's request. This project is a learning/pointing experiment, not evidence of hardware control, deformable manipulation or proven motion safety.
+1. Chen, R. T. Q. and Lipman, Y. [*Flow Matching on General Geometries*](https://arxiv.org/abs/2302.03660). ICLR, 2024. Geodesic flow matching and manifold-valued vector fields.
+2. Braun, M., Jaquier, N., Rozo, L. and Asfour, T. [*Riemannian Flow Matching Policy for Robot Motion Learning*](https://arxiv.org/abs/2403.10672). IROS, 2024. LASA chunk prediction, conditioning and receding-horizon policy design.
+3. de Sa, M., Ong, P. and Ames, A. D. [*From Bundles to Backstepping: Geometric Control Barrier Functions for Safety-Critical Control on Manifolds*](https://arxiv.org/abs/2510.20202v1). 2025. Intrinsic barrier differentials and geometric safety filtering; mechanical backstepping is outside this implementation.
+4. Huang, T.-Y. et al. [*SAD-Flower: Flow Matching for Safe, Admissible, and Dynamically Consistent Planning*](https://arxiv.org/abs/2511.05355v3). Version 3, 2026. Virtual control during generation; its full dynamics-consistency construction is not reproduced here.
+5. Ding, H., Jaquier, N., Peters, J. and Rozo, L. [*Fast and Robust Visuomotor Riemannian Flow Matching Policy*](https://arxiv.org/abs/2412.10855v3). 2025. RFMP/SRFMP background.
+6. EPFL LASA. [*LASA Handwriting Dataset*](https://github.com/epfl-lasa/LASAHandwritingDataset), [official LShape.mat](https://raw.githubusercontent.com/epfl-lasa/LASAHandwritingDataset/master/DataSet/LShape.mat). Observe the source's attribution and academic-use terms.
