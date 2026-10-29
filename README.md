@@ -2,8 +2,10 @@
 
 | Flow matching on S² — seed 303 | Safe flow matching on S² — seed 303 |
 | --- | --- |
-| [![Play the FM video](assets/fm_seed_303_preview.png)](assets/fm_seed_303.mp4) | [![Play the safe FM video](assets/safe_fm_seed_303_preview.png)](assets/safe_fm_seed_303.mp4) |
+| [![Animated FM generation](assets/fm_seed_303.gif)](assets/fm_seed_303.mp4) | [![Animated safe FM generation](assets/safe_fm_seed_303.gif)](assets/safe_fm_seed_303.mp4) |
 | [Watch FM generation and replanning](assets/fm_seed_303.mp4) | [Watch nominal versus CBF-guided generation](assets/safe_fm_seed_303.mp4) |
+
+Looping GIF previews show the full walkthroughs at their original speed, reduced to 720 pixels wide and 8 fps. Click either preview or its link for the full-quality MP4.
 
 We learn short sequences of pointing directions on the sphere, then steer their **generation process** around a forbidden direction. Phase 1 independently implements RFMP's LASA setting [1,2]. Phase 2 combines a geometric CBF [3] with SAD-Flower's virtual-control perspective [4], keeping the trained model frozen.
 
@@ -30,7 +32,7 @@ At the north pole $n=(0,0,1)$, draw a two-dimensional Gaussian tangent and apply
 $$
 \xi=(\xi_1,\xi_2,0)\in T_n\mathbb S^2,\qquad
 (\xi_1,\xi_2)\sim\mathcal N(0,0.5I_2),\qquad
-z=\operatorname{Exp}_n(\xi),\qquad X_0=(z,\ldots,z).
+z=\mathrm{Exp}_n(\xi),\qquad X_0=(z,\ldots,z).
 $$
 
 This is a wrapped-Gaussian prior, with **covariance** $0.5I_2$. One sampled direction is repeated across all eight positions; it is neither a uniform sphere prior nor eight independent draws. Its support is the diagonal of the product manifold.
@@ -40,7 +42,7 @@ This is a wrapped-Gaussian prior, with **covariance** $0.5I_2$. One sampled dire
 For a demonstrated future chunk $Y=(y_1,\ldots,y_8)$, interpolate each factor intrinsically:
 
 $$
-x_i(s)=\operatorname{Exp}_z\!\left(s\operatorname{Log}_z(y_i)\right),\qquad
+x_i(s)=\mathrm{Exp}_z\!\left(s\mathrm{Log}_z(y_i)\right),\qquad
 u_i(s)=\frac{d}{ds}x_i(s)\in T_{x_i(s)}\mathbb S^2.
 $$
 
@@ -79,8 +81,8 @@ Training uses Adam at $10^{-4}$, batch size 128, 200 epochs and EMA decay 0.999.
 Sampling solves $dX_s/ds=V_\theta(s,X_s\mid o_k)$ with factorwise exponential Euler:
 
 $$
-x_i^{\ell+1}=\operatorname{Exp}_{x_i^\ell}(\Delta s\,v_{\theta,i}^\ell),\qquad
-\operatorname{Exp}_x(w)=\cos(\|w\|)x+
+x_i^{\ell+1}=\mathrm{Exp}_{x_i^\ell}(\Delta s\,v_{\theta,i}^\ell),\qquad
+\mathrm{Exp}_x(w)=\cos(\|w\|)x+
 \frac{\sin(\|w\|)}{\|w\|}w,
 $$
 
@@ -104,7 +106,7 @@ The filter uses an expanded internal radius $\vartheta_{\mathrm{int}}=7^\circ$ t
 
 $$
 h(x)=\cos\vartheta_{\mathrm{int}}-c^\top x,\qquad
-a(x)=\operatorname{grad}h(x)=(c^\top x)x-c,\qquad
+a(x)=\mathrm{grad}h(x)=(c^\top x)x-c,\qquad
 dh_x[v]=g_x(a,v)=a^\top v.
 $$
 
@@ -134,7 +136,7 @@ For each sphere factor, solve the minimum-change problem in its current tangent 
 
 $$
 \begin{aligned}
-v_i^\star={}&\underset{v_i\in T_{x_i}\mathbb S^2}{\operatorname{argmin}}
+v_i^\star={}&\underset{v_i\in T_{x_i}\mathbb S^2}{\mathrm{arg\,min}}
 \ \frac12\|v_i-v_{\theta,i}\|_{g_{x_i}}^2,\\
 &\text{subject to}\quad g_{x_i}(a_i,v_i)\ge-\phi(s)h_i.
 \end{aligned}
