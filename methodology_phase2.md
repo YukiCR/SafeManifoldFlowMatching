@@ -16,7 +16,7 @@ At physical rollout index `k`, keep the observation history `o_k` fixed througho
 dX_s/ds = V_theta(s, X_s | o_k) + U_s.
 ```
 
-Both the nominal field and correction belong to the product tangent space. Preserve the paper's manifold integration method for nominal and steered comparisons. A generation step changes a candidate chunk; it does not advance the robot's physical rollout.
+Both the nominal field and projected correction belong to the product tangent space. The selected Phase 2 frame update below projects to exponential Euler; preserve the original Phase 1 sampler and add a matched-update nominal comparison if its solver differs. A generation step changes a candidate chunk; it does not advance the robot's physical rollout.
 
 After generation, check every direction in its RFMP execution portion against the actual requested cone before advancing. If that portion passes, it advances the position-command rollout; update observation history and repeat. If any direction in that portion is unsafe, reject the entire portion, keep the last accepted direction and count a failed rollout. The virtual correction `U` is not a physical angular velocity or torque command.
 
@@ -51,7 +51,7 @@ x_i^+ = R_i^+ e3.
 
 Before activation, bypass the QP and use the nominal rate; enforcing its inequality with `phi=0` would still constrain the flow. At `b_i=0`, keep nominal only when the scalar inequality is already feasible; otherwise report infeasibility. Do not cure this by denominator clipping.
 
-The nominal lift and correction are horizontal (`Omega^T e3=0`), so projection reproduces the round-metric S² tangent filter and exponential-Euler step. The original S² expression is a verification identity, not a second selected algorithm. Frame initialization has no global smooth section; retain an initial local/branched frame and propagate it within generation. Horizontal motion means zero instantaneous axial spin, not globally zero roll. No SO(3) roll training or new SO(3) prior is introduced. These virtual rates are not physical angular-velocity commands or torques.
+The nominal lift and correction are horizontal (`Omega^T e3=0`), so projection reproduces the round-metric S² tangent filter and exponential-Euler step. The original S² expression is a verification identity, not a second selected algorithm. Frame initialization has no global smooth section; retain an initial local/branched frame and propagate it within generation. Each waypoint's frame evolves in generation time, without prescribing roll continuity across physical waypoint indices. Horizontal motion means zero instantaneous axial spin, not globally zero roll. No SO(3) roll training or new SO(3) prior is introduced. These virtual rates are not physical angular-velocity commands or torques.
 
 Although filtering separates by position, the learned nominal field still sees the joint chunk. This formulation uses no correction-speed bound and establishes no physical actuator feasibility. Its derivation follows the [geometric CBF framework](https://arxiv.org/abs/2510.20202v1); the schedule follows [SAD-Flower, Section 5](https://arxiv.org/html/2511.05355v3#S5). See the [complete core method](methodology.md) for the metric, quotient, equivalence proof and limitations.
 
