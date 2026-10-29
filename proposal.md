@@ -1,6 +1,6 @@
 # Proposal: generation-time geometric CBFs for Riemannian motion sequences
 
-29 October 2026. **Design stage; overall proposal and implementation approval pending.**
+29 October 2026. **Consolidated methodology ready for overall proposal review; specification, tickets and implementation remain pending.**
 
 ## Purpose
 
@@ -20,6 +20,7 @@ Primary references are **RFMP**, **From Bundles to Backstepping**, and **SAD-Flo
 - Develop in two auditable phases: **Phase 1, reproduce RFMP without safety; Phase 2, add safety steering inside generation.** The applicant approved retaining the same RFMP position-chunk horizons, replanning loop and frozen model for Phase 2. Establish a reproducible Phase 1 baseline before beginning Phase 2.
 - Initial trials use **LASA LShape only**, mapped onto S². Do not expand to multiple families or switch to synthetic training data without agreement.
 - Manage the project with its own Git repository, **SafeManifoldFlowMatching**, at `application/SafeManifoldFlowMatching/`.
+- **Failure policy:** before advancing the rollout, inspect the entire next execution portion against the actual cone. If any of its directions is unsafe, reject that portion, stop at the last accepted direction and count a failed rollout. No partial-prefix execution, fresh-noise retries or post-hoc point repair. Constrain the full predicted chunk and report unused-tail violations separately.
 
 These decisions establish the direction. They do not yet authorize implementation, tests, data generation or experiments.
 
@@ -135,13 +136,15 @@ The applicant selected unconstrained source noise and final-generation waypoint 
 
 SAD-Flower uses an initial unsteered phase and a controlled phase with prescribed-time scheduling; the activation time is a later numerical design parameter. Its theorem assumes joint feasibility and uses a singular gain near terminal generation time. An ordinary constant-gain invariance CBF does not alone establish finite-time recovery from unsafe source waypoints. [SAD-Flower Sections 5.2–5.3](https://arxiv.org/html/2511.05355v3#S5)
 
-The finite-step implementation must specify terminal stopping, residual tolerances and failure reporting. The selected internal forbidden-cone margin provides room for recovery error but is not an established discrete safety guarantee; final positions must still be checked against the actual cone. At the forbidden center, the spherical barrier gradient vanishes while an unsafe-recovery inequality can demand a positive derivative, so recovery feasibility must not be asserted for every source sample. Near-degenerate cases and any retries/rejections must be visible in the evaluation. Stop-on-failure versus bounded retries remains a design choice.
+The finite-step implementation must specify terminal stopping, residual tolerances and failure reporting. The selected internal forbidden-cone margin provides room for recovery error but is not an established discrete safety guarantee; final positions must still be checked against the actual cone. At the forbidden center, the spherical barrier gradient vanishes while an unsafe-recovery inequality can demand a positive derivative, so recovery feasibility must not be asserted for every source sample. The applicant selected stopping and counting a failed rollout if the next execution portion contains unsafe directions. Unused-tail violations and numerical failures must be reported separately; do not resample to conceal them.
 
 For a chunk-based extension, the supplied current direction should already be safe for any claimed safe rollout. Making the generated chunk safe cannot repair the previously supplied current direction or guarantee that the connection to the first commanded position avoids the cone. The claim sought concerns generated positions at the end of FM generation, not intermediate candidates or connecting arcs. No fixed physical endpoint constraints are part of Phase 1.
 
 ## What the project will and will not establish
 
 Evaluate generated-position clearance, sphere norm/tangency errors, rollout terminal-goal error, demonstration/motion fidelity, interventions and runtime. Distinguish a chunk's last point from the final task goal; intermediate chunks are not supposed to reach that goal. Also measure roughness or adjacent angular jumps so safety obtained by destroying useful motion structure is visible.
+
+Apply the same execution acceptance/stopping check to nominal and steered Phase 2 rollout comparisons. Report pre-acceptance unsafe proposals, unsafe execution-portion rejections, whole-chunk violations, rollout completion and numerical failures. Zero unsafe executed points produced by stopping is not itself evidence of successful CBF generation; stopped runs remain failures in the overall accounting. Preserve Phase 1's original unguided reproduction outputs separately.
 
 Connecting arcs can enter the cap even when every waypoint is safe. We will explicitly report that limitation. A diagnostic of interpolated clearance is recommended if inexpensive, but continuous-path constraint enforcement is not an agreed core requirement. Geometry-preserving integration does not remove this gap.
 
@@ -174,16 +177,16 @@ Detailed paper readings: [flow matching/stability](docs/references/flow_matching
 
 | Stage | Proposed ceiling |
 | --- | ---: |
-| Paper research, grilling and proposal agreement | 2 h |
+| Paper research, grilling and proposal agreement, including the elapsed discussion window | 5 h |
 | Specification, approved tickets and test-boundary agreement | 1 h |
-| Geometry/data and a first end-to-end TDD slice | 3 h |
-| Nominal sequence-model training and learning validation | 3 h |
+| Geometry/data and a first end-to-end TDD slice | 2 h |
+| Nominal sequence-model training and learning validation | 2 h |
 | Generation-time CBF and numerical handling | 3 h |
-| Matched evaluation and stress cases | 2 h |
+| Matched evaluation and stress cases | 1 h |
 | Visualizations, report and application evidence | 2 h |
 | Contingency | 2 h |
 | **Maximum total project work** | **18 h** |
 
-Proposed hard stop is 30 October 10:00 China time or earlier, retaining the rest of the day for application preparation. Confirm the cutoff during grilling. Research for this proposal began about 15:58 China time on 29 October. Do not consume the entire budget merely because it is available.
+Proposed project hard stop, to confirm during overall proposal review: **30 October 09:45 China time, or earlier when the 18-hour total budget is reached**, retaining the rest of the day for application preparation. Research began about 15:58 China time on 29 October. At the 20:47 scheduling check, roughly 4 h 49 min had elapsed including discussion; this is a conservative planning window, not a measured active-work log. The revised allocation reserves 5 h for preparation and 13 h for subsequent stages. Do not consume the entire budget merely because it is available.
 
-Follow **grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed boundaries**. Phase 1's RFMP method, Phase 2's same-chunk/replanning structure and an internal angular safety margin are selected. Hard endpoint pinning and a separate whole-trajectory model are outside that structure. Remaining decisions include failure handling, numerical parameters, under-specified reproduction details, evaluation thresholds and the hard stop. LASA LShape, Git management and terminal-recovery initialization are agreed. No project implementation, tests, generated data, model training or experiments are approved yet.
+Follow **grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed boundaries**. Phase 1's RFMP method, Phase 2's same-chunk/replanning structure, an internal angular safety margin and the execution-portion stopping rule are selected. Hard endpoint pinning and a separate whole-trajectory model are outside that structure. The consolidated proposal is ready for overall review, including its proposed core evaluation and revised scheduling allocation. After proposal approval, fix numerical parameters, under-specified reproduction details and evaluation thresholds in the specification, then prepare reviewable tickets before implementation. No project implementation, tests, generated data, model training or experiments are approved yet.

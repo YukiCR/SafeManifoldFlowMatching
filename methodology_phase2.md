@@ -1,6 +1,6 @@
 # Phase 2 methodology proposal
 
-29 October 2026. **Methodology under design discussion; not an approved specification or implementation.** The applicant approved retaining RFMP's same position-chunk horizons and replanning loop for Phase 2, steering each FM generation solve while freezing the Phase 1 model. A slightly expanded internal forbidden cone is also approved; its margin magnitude remains a specification item. Failure handling and remaining numerical/evaluation choices are still proposed. Undocumented Phase 1 reproduction details remain specification items.
+29 October 2026. **Core methodology decisions recorded; consolidated proposal ready for overall review. No approved specification or implementation.** The applicant approved retaining RFMP's same position-chunk horizons and replanning loop, steering each FM generation solve while freezing the Phase 1 model; a slightly expanded internal forbidden cone; and stopping on an unsafe next execution portion. Exact numerical settings and evaluation thresholds remain specification items. Undocumented Phase 1 reproduction details must be explicit.
 
 ## Objective and scope
 
@@ -18,7 +18,7 @@ dX_s/ds = V_theta(s, X_s | o_k) + U_s.
 
 Both the nominal field and correction belong to the product tangent space. Preserve the paper's manifold integration method for nominal and steered comparisons. A generation step changes a candidate chunk; it does not advance the robot's physical rollout.
 
-After generation, inspect and return the candidate. Only its RFMP execution portion advances the position-command rollout. Update observation history and repeat. The virtual correction `U` is not a physical angular velocity or torque command.
+After generation, check every direction in its RFMP execution portion against the actual requested cone before advancing. If that portion passes, it advances the position-command rollout; update observation history and repeat. If any direction in that portion is unsafe, reject the entire portion, keep the last accepted direction and count a failed rollout. The virtual correction `U` is not a physical angular velocity or torque command.
 
 ## Barrier and minimum-change correction
 
@@ -60,7 +60,9 @@ h_actual >= cos(theta) - cos(theta+delta) - eta.
 
 This identity explains the margin; it does not establish a discrete residual bound. The returned sample must still be checked directly. Declare stopping time, margin, tolerance and guidance parameters before final evaluation. No undisclosed post-hoc waypoint repair or success-only rejection sampling.
 
-At `x_i=c`, the barrier gradient vanishes while recovery can require a positive derivative; the constraint is infeasible there. A zero-gradient constraint that is already satisfied instead needs no correction. Treat zero/near-zero gradient cases explicitly. Adding a denominator epsilon alone does not solve the original inequality. Report failed or unresolved generations and do not advance a rollout with a chunk that failed its declared acceptance check. **Pending failure-policy choice:** stop the rollout at its last accepted direction and count a failure (recommended), or retry from fresh noise with a fixed attempt limit and full attempt accounting. A stopped rollout counts as a failure, not a completed safe motion.
+At `x_i=c`, the barrier gradient vanishes while recovery can require a positive derivative; the constraint is infeasible there. A zero-gradient constraint that is already satisfied instead needs no correction. Treat zero/near-zero gradient cases explicitly. Adding a denominator epsilon alone does not solve the original inequality. Numerical failure or invalid sampler output must be reported rather than hidden as successful recovery.
+
+**Approved failure policy:** if any direction in the next execution portion violates the actual cone, reject that entire portion before advancing, stop at the last accepted direction and count a rollout failure. Do not execute its safe leading subset, retry from fresh noise, or repair its points after generation. A stopped rollout is not a completed safe motion. Continue to impose barriers on all predicted positions; violations confined to the unused tail are recorded as whole-chunk constraint failures and do not alone trigger the execution stopping rule. Invalid geometry or numerical failure receives its own failure label.
 
 ## Evaluation that isolates the extension
 
@@ -68,6 +70,8 @@ Use two complementary comparisons:
 
 1. **Matched single-chunk generation:** identical checkpoint, observation/context, source chunk and integration budget; guidance is the difference. Measure final constraint violations/clearance, displacement from nominal output, motion roughness, intervention magnitude, constraint residuals and runtime.
 2. **Receding-horizon rollouts:** identical initial history, scenario and random-seed schedule. Evaluate executed-position clearance, motion fidelity, terminal goal error, goal-reaching rate, stalls/stops and runtime. After steering changes a rollout, later observation histories can differ; do not describe those later conditions as identical.
+
+For the Phase 2 comparison, use the same execution acceptance/stopping check for nominal and steered rollouts. Keep Phase 1's original reproduction outputs separately. Report violations **before** acceptance, unsafe execution-portion rejection rate, whole-chunk violations, completion and goal-reaching, and numerical failures. The acceptance check is separate from CBF steering: zero unsafe executed points obtained by stopping is not by itself evidence that the generator improved. Keep stopped runs in the denominator and do not compare fidelity only on favorable survivors.
 
 If safety numerics require a different time grid or stopping point from the validated Phase 1 sampler, include an unsteered comparison with that same numerical protocol. Retain the original Phase 1 result separately. Otherwise truncation or extra integration effort could be mistaken for an effect of CBF steering. Record the change rather than overwriting the original baseline configuration.
 
@@ -79,4 +83,4 @@ Use terminal goal error as an outcome, not as a hard safety constraint or an imp
 
 The intended result concerns **sampled directions returned by the generator and the discrete position-command rollout**. Connecting arcs, including the connection from the supplied current direction to the next command, can remain unsafe. No dynamic-consistency, physical tracking or torque-level guarantee is claimed. The supplied initial direction cannot be retroactively repaired by filtering future generated positions.
 
-**Approved decisions:** retain the same RFMP position-chunk horizons, observation conditioning and replanning loop; add generation-time correction using the frozen Phase 1 model; use a slightly expanded internal cap and measure actual-cone safety. Do not replace the sampler with a separate complete-trajectory model. Remaining design discussion covers the cone/scenario setup, failure accounting and evaluation criteria; exact numerical values, including margin magnitude, belong in the approved specification. No implementation, tests or experiments have been started.
+**Approved decisions:** retain RFMP's position-chunk horizons, observation conditioning and replanning loop; steer FM generation using the frozen Phase 1 model; use a slightly expanded internal cap and measure actual-cone safety; stop and count failure when the next execution portion is unsafe. Do not replace the sampler with a separate complete-trajectory model. The concrete proposal uses one static cap and paired generation/rollout evaluation as described above. Overall proposal review precedes the specification, which must fix numerical values, scenario construction and acceptance thresholds. No implementation, tests or experiments have been started.

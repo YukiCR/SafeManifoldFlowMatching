@@ -18,7 +18,9 @@ Approved design choices so far:
 
 The Phase 1 method, documented RFMP settings and Phase 2 chunk/replanning structure are selected. Do not add hard start/goal pinning, a new sequence architecture or mandatory SRFMP to that reproduction. Undocumented reproduction details and Phase 2 numerical safety/evaluation choices remain to be resolved. Overall proposal approval and the specification/tickets/TDD stages remain pending. See the [provisional proposal](proposal.md).
 
-Phase 1's method design is settled; its remaining reproduction details will be explicit in the specification. The [Phase 2 methodology draft](methodology_phase2.md) records the approved chunk/replanning structure and internal angular safety margin: filter against a slightly expanded forbidden cone, evaluate against the actual cone. The margin magnitude and numerical settings remain specification items. Failure handling and evaluation are still under design discussion.
+Phase 1's method design is settled; its remaining reproduction details will be explicit in the specification. The [Phase 2 methodology draft](methodology_phase2.md) records the approved chunk/replanning structure and internal angular safety margin: filter against a slightly expanded forbidden cone, evaluate against the actual cone. The margin magnitude, numerical settings and measurable evaluation thresholds remain specification items.
+
+The applicant selected **stop on an unsafe next execution portion**: reject that portion before advancing, retain the last accepted direction and count a rollout failure. No fresh-noise retries. The filter still constrains the complete prediction horizon; unused-tail violations are reported separately. The consolidated proposal is ready for overall review, with numerical settings and measurable acceptance thresholds to be made explicit in the specification.
 
 The [data-source comparison](data_options.md) records the alternatives and the selection of LASA LShape. Its small number of independent demonstrations limits the conclusions of the initial trial.
 
