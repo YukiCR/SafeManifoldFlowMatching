@@ -1,8 +1,8 @@
 # SafeManifoldFlowMatching working rules
 
-This is a small research-preparation project for Chengrui Shi's KTH application. Read `README.md` and `proposal.md` before working. Parent workspace instructions also apply.
+This is a small research-preparation project for Chengrui Shi's KTH application. Read `README.md` and `methodology.md` before working; `proposal.md` records the approved scope. Parent workspace instructions also apply.
 
-- Project implementation is not yet approved. Follow grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed public boundaries.
+- Proposal approved. Latest user instruction explicitly holds specification and tickets while standalone agents and the applicant review `methodology.md`. Do not create or proceed with specs/tickets, project implementation, tests or experiments during this review. After review, follow the user's requested workflow: grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed public boundaries. Standalone review findings are recommendations, not new approved scope.
 - Ask design questions one at a time and record decisions. A recommendation is not approval.
 - Initial data source is **LASA LShape only**, mapped onto S². Preserve source provenance and data-use terms. RFMP reports an 80/10/10 split but its split unit is unverified; resolve and document this in the spec. Overlapping windows are not independent recordings, and a window split must not be described as held-out-demonstration generalization.
 - User decided Phase 1 reimplements original RFMP's LASA method and inherits its documented decisions. Generate short position chunks on a product of spheres, condition on observation history, and roll out with replanning. No hard start/goal pinning. This supersedes the earlier complete-trajectory proposal for Phase 1. Do not silently invent undocumented paper details.

@@ -1,0 +1,154 @@
+# SafeManifoldFlowMatching: core methodology for review
+
+29 October 2026. **Proposal approved; methodology now under standalone-agent and applicant review. Specification and tickets are explicitly on hold.** No project code, tests, dataset preparation, model training or experiments have been performed. This document consolidates the current method so it can be reviewed without reconstructing the discussion.
+
+## 1. Purpose and scope
+
+Demonstrate learning, manifold geometry, safety control and robotics through a small **S² robot-pointing** study: can a learned motion generator adapt to a forbidden viewing/tool direction through correction of its generation dynamics?
+
+- Initial data: **LASA LShape only**, human handwriting positions embedded on S²; not recorded robot pointing data.
+- **Phase 1:** reimplement the original RFMP LASA method, inheriting its documented choices.
+- **Phase 2:** freeze that validated model; add generation-time geometric CBF steering to the same position chunks and retain the replanning loop.
+- No physical robot, full SO(3), torque dynamics, learned dynamics model, dynamic-consistency CLF, hard goal pinning or mandatory SRFMP.
+- **At most 18 hours including preparation**, with the approved project hard stop of **30 October 2026, 09:45 China time**, or earlier if the budget is exhausted. Preserve application preparation time before the 30 October deadline.
+
+Core evidence will be a reproducible nominal baseline, the safety extension, paired evaluation, visualizations and a short explanation of derivations, failures and limitations. An incomplete or unsuccessful experiment must remain described as such.
+
+## 2. References and division of roles
+
+| Reference | What we inherit/use | What we do not claim |
+| --- | --- | --- |
+| Braun, Jaquier, Rozo and Asfour, [RFMP, IROS 2024](https://arxiv.org/html/2403.10672v1) | LASA position-chunk learning, observation/context conditioning and receding-horizon inference | Reproduction of every family, image experiment, diffusion baseline or all reported numerical results |
+| Chen and Lipman, [Riemannian FM, ICLR 2024](https://arxiv.org/abs/2302.03660) | Geodesic conditional flow matching, tangent fields, manifold integration | Safety or physical goal-reaching guarantees |
+| de Sa, Ong and Ames, [geometric CBFs](https://arxiv.org/abs/2510.20202v1) | Intrinsic barrier gradient and minimum-norm tangent correction | Torque-level backstepping or full mechanical-system safety |
+| Huang et al., [SAD-Flower](https://arxiv.org/html/2511.05355v3) | Virtual control inside generation; terminal recovery from unsafe candidate coordinates | Complete reproduction, action admissibility, dynamics consistency or automatic inheritance of its theorem |
+
+The later [RFMP/SRFMP paper](https://arxiv.org/abs/2412.10855v3) supplies context. Its distribution-support stability is distinct from physical convergence to a task goal. Official original-author LASA RFMP training/sampling code has not been verified; the source of inherited settings is the paper. See the [implementation audit](docs/references/lasa_implementation_comparison.md).
+
+## 3. What is generated: two time axes
+
+At physical rollout index `k`, RFMP receives observation/context `o_k` and generates a **short sequence of desired positions**, each on S²:
+
+```text
+X_s = (x_1(s), ..., x_m(s)) in (S²)^m,
+dX_s/ds = V_theta(s, X_s | o_k),      s in [0,1].
+```
+
+`s` is FM generation time, not physical motion time. One integration step adjusts the entire candidate chunk jointly. Keep `o_k` fixed within this generation solve. Intermediate candidates are not executed.
+
+After sampling, advance through the initial execution portion, update the observed history, generate another chunk and replace the old unused tail. The complete motion is assembled by these repeated predictions. **Retain the chunk structure, not identical numerical predictions.** An action in this LASA abstraction is a desired direction/position; it need not be an angular velocity.
+
+## 4. Phase 1: inherited RFMP baseline
+
+| Item | Paper-reported choice to inherit |
+| --- | --- |
+| Data | Seven recordings per family; use LShape only; represent each recording with 200 ordered time steps |
+| Observation/context | Reference observation `o_(τ-1)`, earlier context `o_c`, separation `τ-c`; sample `c` from the paper's earlier-history range |
+| Horizons | Prediction horizon 8; execution horizon half; point-count versus transition-count indexing remains to be made explicit |
+| Sphere prior | Wrapped Gaussian centered at the north pole, reported scale σ=0.5; repeat one sampled point over the chunk |
+| Training paths | Coordinatewise sphere geodesics between source and demonstrated chunks |
+| Network | MLP, reported five layers and 64 hidden units; Swish with learnable parameter |
+| Optimization | Adam, learning rate 1e-4; EMA decay 0.999; 200 epochs; best validation model |
+| Split | Reported 80/10/10; the split unit is not established by the accessible paper description |
+| Sampling | Riemannian Euler; generate a chunk, use its execution portion and replan |
+| Endpoints | No added hard start/goal mask or explicit final-goal conditioning |
+
+Geometry: for `x in S²`, let `P_x=I-xx^T`. Each predicted field must be tangent, for example `V_i=P_(x_i) F_i(s,X,o)`. Construct and differentiate a correctly directed geodesic from source to data; regress tangent vectors using the product Riemannian metric. An intrinsic exponential update preserves the intended geometry. Coincident points and antipodal/cut-locus cases need explicit numerical handling later.
+
+Do not substitute an analytic goal-attraction field for learning, independent noise at every waypoint for the repeated-point prior, or a new sequence architecture for the inherited MLP. Any required deviation must be disclosed rather than presented as an RFMP choice.
+
+### Reproduction gaps, not invented facts
+
+The precise planar normalization/sphere embedding, split unit, MLP layer-count convention, rollout bootstrap/context handling, terminal padding and integration resolution are not yet resolved. These need explicit later choices, supported by sources where available. **No specification values are selected by this document.**
+
+Seven recordings can produce many overlapping chunks/context pairs but remain seven independent human demonstrations. An exact 80/10/10 whole-recording split is impossible with seven recordings. A window split cannot establish held-out-recording generalization; a grouped-recording split would be a disclosed change from the reported percentages. Do not assume augmentation or share transformed raw datasets without checking provenance and terms.
+
+### Baseline preservation
+
+Validate motion learning and manifold adherence before Phase 2. Preserve checkpoint, exact preprocessing and split unit/indices, configuration, inference settings, initial observation histories, random states and baseline outputs. Record hashes and a baseline Git commit. Do not retrain or change preprocessing in the core safety comparison.
+
+## 5. Phase 2: generation-time safety steering
+
+Use **one static forbidden spherical cap per rollout**, with unit center `c` and requested half-angle `theta`. The cap is supplied to the safety layer; it is not a new input to or training condition for the frozen network. Initially choose a route-conflicting cap with the supplied start and demonstrated goal outside the expanded internal cap; include a no-conflict comparison. Scenario construction will be explicit before final evaluation.
+
+The controlled generator is
+
+```text
+dX_s/ds = V_theta(s, X_s | o_k) + U_s.
+```
+
+`U` is a virtual tangent correction to the sampler, not a physical robot velocity or torque. Apply constraints to **all predicted positions**, including the unused tail.
+
+### Actual constraint and approved internal margin
+
+The requested safe set is
+
+```text
+h_actual(x) = cos(theta) - c^T x >= 0.
+```
+
+The applicant selected a slightly expanded internal cap, `theta_int=theta+delta`, with `0<theta<theta_int<pi`. Use
+
+```text
+h_i = cos(theta_int) - c^T x_i,
+a_i = grad_S² h_i = -(I-x_i x_i^T)c
+```
+
+inside the filter. **Evaluate reported safety and execution acceptance against the actual `theta`.** The margin magnitude is unselected. If an internal residual is bounded below by `-eta`, then `h_actual >= cos(theta)-cos(theta+delta)-eta`. This identity explains the margin but supplies no discrete residual bound by itself.
+
+### Minimum-change tangent filter
+
+At each controlled generation step, minimize `(1/2) sum_i ||U_i||²` subject to
+
+```text
+a_i^T (V_i + U_i) >= -phi(s) h_i,
+U_i in T_(x_i) S².
+```
+
+For one cap and independent unbounded tangent corrections, the solution separates across positions. When `||a_i||²>0`,
+
+```text
+U_i = max(0, -(a_i^T V_i + phi(s) h_i)/||a_i||²) a_i.
+```
+
+This is our specialization of geometric CBF machinery to RFMP generation, not an assertion that the references implement this exact combination. The nominal field still couples positions through the joint chunk.
+
+### Terminal recovery and its limits
+
+Retain the Phase 1 prior **without excluding unsafe cone samples**. Intermediate candidates may be unsafe. Follow SAD-Flower's nominal initial generation interval and controlled later interval; its reference schedule is `phi(s)=gamma/(1-s)^2`. Activation, gain, numerical stopping and integration settings are unresolved.
+
+The intended constraint objective concerns positions at the end of generation. For an unsafe initial barrier, the equality solution `h(s)=h(s_on) exp(-integral(phi))` can stay negative at every `s<1` and only approach zero at the singular endpoint. Do not evaluate that singular gain at `s=1` or claim ideal terminal recovery as an exact finite-step certificate. The internal margin and final check are practical measures, not an automatic numerical theorem.
+
+At the unsafe cap center, `a_i=0` and the recovery inequality can be infeasible. At a zero-gradient safe point, zero correction can be feasible. Handle these branches explicitly; denominator clipping alone does not solve an infeasible constraint. Virtual correction is unbounded in the ideal formulation; there is no actuator-feasibility guarantee.
+
+## 6. Approved stopping rule
+
+Before advancing, inspect **every position in the next execution portion** against the actual cone. If any is unsafe:
+
+1. Reject the entire execution portion before advancing.
+2. Retain the last accepted direction and stop the rollout.
+3. Count a rollout failure; do not execute its safe leading subset, resample fresh noise or repair points after generation.
+
+Continue to constrain the full chunk. An unused-tail violation is a whole-chunk constraint failure and is reported separately; it does not alone trigger the execution stopping rule. Invalid geometry and numerical failure also require explicit failure accounting. A stopped rollout is not a completed safe motion.
+
+## 7. Evaluation and claims
+
+**Matched chunks:** compare nominal and steered generation with identical model, observation/context, source chunk and numerical budget. Record actual/internal clearance, unsafe execution-portion and whole-chunk proposal rates **before acceptance**, roughness/adjacent angular jumps, displacement from nominal, intervention size/residuals, runtime and numerical failures.
+
+**Receding-horizon rollouts:** use identical initial histories/scenarios and random-seed schedules; later observation histories can diverge after steering. Apply the same execution stopping check to both nominal and steered Phase 2 comparisons. Report completion, goal error/reaching, pre-acceptance violations, stops/stalls, geometry errors and runtime, retaining failures in the denominator. Preserve the original Phase 1 reproduction separately. If safety changes the numerical grid or stopping time, include an unsteered comparison using that same protocol.
+
+Zero unsafe executed points obtained solely by stopping is not evidence that CBF steering improved generation. Do not assess fidelity only on favorable survivors or retain only favorable cone placements. Freeze final scenarios, tuning/evaluation separation and thresholds before the final comparison. Goal reaching is measured, not guaranteed by a CLF or a pinned endpoint.
+
+**Explicit limitations:** safe sampled directions do not ensure safe connecting arcs, including the current-to-next-command connection. There is no continuous-path, tracking, dynamic-consistency, global goal-convergence or torque-feasibility guarantee. LASA embedding and one-family results do not establish deformable-object manipulation or general robotics performance.
+
+## 8. Review questions and next gate
+
+Standalone reviewers should independently assess:
+
+- Is the geometric filter and recovery argument correct, with assumptions and failure cases stated accurately?
+- Does the baseline faithfully preserve documented RFMP decisions while exposing reproduction gaps?
+- Is the combination useful and numerically practical within the remaining time, or does it need a smaller approved scope?
+- Do the acceptance rule and metrics separate sampler improvement from stopping, geometry adherence and goal progress?
+- Which issues are actual methodology blockers, and which are ordinary choices for a later specification?
+
+Review reports are advisory findings, not new applicant decisions. **The applicant reviews this method before any specification or tickets proceed.** No code, tests, simulations, dataset preparation, training or experiments are authorized by this document or the reviews. Detailed background: [proposal](proposal.md), [Phase 2 derivation](methodology_phase2.md), [reference notes](docs/references/flow_matching_and_stability.md).

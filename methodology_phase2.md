@@ -1,6 +1,6 @@
 # Phase 2 methodology proposal
 
-29 October 2026. **Core methodology decisions recorded; consolidated proposal ready for overall review. No approved specification or implementation.** The applicant approved retaining RFMP's same position-chunk horizons and replanning loop, steering each FM generation solve while freezing the Phase 1 model; a slightly expanded internal forbidden cone; and stopping on an unsafe next execution portion. Exact numerical settings and evaluation thresholds remain specification items. Undocumented Phase 1 reproduction details must be explicit.
+29 October 2026. **Proposal approved; specification and tickets explicitly on hold for standalone-agent and applicant review of [the consolidated core methodology](methodology.md). No implementation approval.** The applicant approved retaining RFMP's same position-chunk horizons and replanning loop, steering each FM generation solve while freezing the Phase 1 model; a slightly expanded internal forbidden cone; and stopping on an unsafe next execution portion. Exact numerical settings and evaluation thresholds remain unresolved. Undocumented Phase 1 reproduction details must be explicit.
 
 ## Objective and scope
 

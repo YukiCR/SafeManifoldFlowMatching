@@ -1,6 +1,6 @@
 # Proposal: generation-time geometric CBFs for Riemannian motion sequences
 
-29 October 2026. **Consolidated methodology ready for overall proposal review; specification, tickets and implementation remain pending.**
+29 October 2026. **Proposal approved by the applicant. Specification and tickets are explicitly on hold for standalone-agent and applicant review of [methodology.md](methodology.md). Implementation remains unapproved.**
 
 ## Purpose
 
@@ -187,6 +187,6 @@ Detailed paper readings: [flow matching/stability](docs/references/flow_matching
 | Contingency | 2 h |
 | **Maximum total project work** | **18 h** |
 
-Proposed project hard stop, to confirm during overall proposal review: **30 October 09:45 China time, or earlier when the 18-hour total budget is reached**, retaining the rest of the day for application preparation. Research began about 15:58 China time on 29 October. At the 20:47 scheduling check, roughly 4 h 49 min had elapsed including discussion; this is a conservative planning window, not a measured active-work log. The revised allocation reserves 5 h for preparation and 13 h for subsequent stages. Do not consume the entire budget merely because it is available.
+Approved project hard stop: **30 October 09:45 China time, or earlier when the 18-hour total budget is reached**, retaining the rest of the day for application preparation. Research began about 15:58 China time on 29 October. At the 20:47 scheduling check, roughly 4 h 49 min had elapsed including discussion; this is a conservative planning window, not a measured active-work log. The revised allocation reserves 5 h for preparation and 13 h for subsequent stages. Do not consume the entire budget merely because it is available.
 
-Follow **grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed boundaries**. Phase 1's RFMP method, Phase 2's same-chunk/replanning structure, an internal angular safety margin and the execution-portion stopping rule are selected. Hard endpoint pinning and a separate whole-trajectory model are outside that structure. The consolidated proposal is ready for overall review, including its proposed core evaluation and revised scheduling allocation. After proposal approval, fix numerical parameters, under-specified reproduction details and evaluation thresholds in the specification, then prepare reviewable tickets before implementation. No project implementation, tests, generated data, model training or experiments are approved yet.
+Follow **grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed boundaries**. Phase 1's RFMP method, Phase 2's same-chunk/replanning structure, an internal angular safety margin and the execution-portion stopping rule are selected. Hard endpoint pinning and a separate whole-trajectory model are outside that structure. The applicant approved this proposal, then requested standalone and applicant review of [the consolidated methodology](methodology.md) before any specification or tickets. That latest instruction is the current gate. No project implementation, tests, generated data, model training or experiments are approved yet.
