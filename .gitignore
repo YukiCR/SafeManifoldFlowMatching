@@ -1,0 +1,21 @@
+# Local environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# External data and generated experiment artifacts
+data/
+checkpoints/
+runs/
+artifacts/
+
+# Local configuration
+.env
+.env.*
+!.env.example
+.DS_Store
