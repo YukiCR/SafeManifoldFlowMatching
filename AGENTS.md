@@ -2,7 +2,7 @@
 
 This is a small research-preparation project for Chengrui Shi's KTH application. Read `README.md` and `methodology.md` before working; `proposal.md` records the approved scope. Parent workspace instructions also apply.
 
-- Proposal approved. Latest user instruction: keep geometry language and all computation directly on S², overriding the SO(3) lift; audit again, then progress to Phase 1 specification, tickets and TDD if sound. Follow the agreed ticket/test-interface approval workflow. Do not implement Phase 2 before a validated frozen Phase 1 baseline. Reviewer suggestions do not change scope automatically.
+- Proposal, Phase 1 specification, ticket breakdown, local workflow setup and the two public test interfaces (sphere geometry and Phase 1 study) are approved. Implement Phase 1 via red-before-green, one behavior at a time. Latest user instruction: keep geometry language and all computation directly on S², overriding the SO(3) lift; audit again, then progress to Phase 1 specification, tickets and TDD if sound. Follow the agreed ticket/test-interface approval workflow. Do not implement Phase 2 before a validated frozen Phase 1 baseline. Reviewer suggestions do not change scope automatically.
 - Ask design questions one at a time and record decisions. A recommendation is not approval.
 - Manifold language and geometry are core user requirements. State the product-sphere manifold, its tangent spaces/bundle and canonical round metric explicitly; interpret learning and virtual safety controls in the same tangent fiber. Embedded arrays are representations, not permission to substitute Euclidean interpolation, an incorrect whole-chunk normalization or untyped cross-point velocity comparisons. Keep metric loss, intrinsic barrier differential, manifold integration terminology and geometric diagnostics consistent. No full physical SO(3) controller is implied by the geometric-CBF reference.
 - Final selected safety filter is the direct-S² tangent-velocity QP: minimize (1/2)||v_i-v_theta,i||²_g over T_(x_i)S², subject dh_i[v_i]>=-phi(s)h_i, with a_i=grad h_i=-(I-x_i x_i^T)c. Use the round metric and sphere exponential; no SO(3) frames, body rates or roll variables. The former SO(3) choice is explicitly superseded; preserve its reports as history. Before guidance activation bypass the QP, not merely its gain. Numerical values remain to be specified.
@@ -14,3 +14,18 @@ This is a small research-preparation project for Chengrui Shi's KTH application.
 - Total project budget is at most 18 hours, preserving application preparation headroom before 30 October. Do not silently expand scope.
 - Keep coherent Git commits, with model/data configuration and provenance tracked. External datasets, model checkpoints and generated run artifacts are ignored by default. No remote/push or publication is authorized by local Git setup.
 - Do not include private application records, shared CVs, credentials or certificates in this repository. Do not claim proposed/unperformed work or unreviewed agent artifacts as applicant achievements.
+
+## Agent skills
+
+### Issue tracker
+
+Use local Markdown specs and one file per ticket under .scratch. See docs/agents/issue-tracker.md.
+
+### Triage labels
+
+Use the five default statuses. See docs/agents/triage-labels.md.
+
+### Domain docs
+
+Single-context project; consume existing context/ADRs when present. See docs/agents/domain.md.
+

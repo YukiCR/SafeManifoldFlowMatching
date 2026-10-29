@@ -1,6 +1,6 @@
 # SafeManifoldFlowMatching
 
-**Final direct-S² method selected. Re-audit is the current gate; the applicant conditionally authorizes Phase 1 specification, tickets and TDD after a sound audit and the agreed workflow approvals.** Start with the consolidated [core methodology](methodology.md). The applicant requires grilling → approved proposal → specification → approved tickets → TDD. Maximum project time is 18 hours, with headroom for the 30 October application.
+**Final direct-S² audit passed. Phase 1 specification and ticket drafts are ready for review; TDD awaits the agreed ticket/test-interface approval.** Start with the consolidated [core methodology](methodology.md). The applicant requires grilling → approved proposal → specification → approved tickets → TDD. Maximum project time is 18 hours, with headroom for the 30 October application.
 
 The previous chain results and obsolete agent-created implementation were deleted on 29 October 2026. No new project code, tests, demonstrations, training or experiments have been created or run.
 
@@ -20,7 +20,7 @@ The Phase 1 method, documented RFMP settings and Phase 2 chunk/replanning struct
 
 Phase 1's method design is settled; its remaining reproduction details will be explicit in the specification. The [Phase 2 methodology draft](methodology_phase2.md) records the approved chunk/replanning structure and internal angular safety margin: filter against a slightly expanded forbidden cone, evaluate against the actual cone. The margin magnitude, numerical settings and measurable evaluation thresholds remain specification items.
 
-The applicant selected **stop on an unsafe next execution portion**: reject that portion before advancing, retain the last accepted direction and count a rollout failure. No fresh-noise retries. The filter still constrains the complete prediction horizon; unused-tail violations are reported separately. The three [standalone reviews are complete](docs/reviews/README.md), with factual clarifications and numerical risks recorded. The latest instruction permits progressing to Phase 1 after a sound re-audit; the ticket breakdown and test interfaces still follow the agreed approval workflow.
+The applicant selected **stop on an unsafe next execution portion**: reject that portion before advancing, retain the last accepted direction and count a rollout failure. No fresh-noise retries. The filter still constrains the complete prediction horizon; unused-tail violations are reported separately. The three [standalone reviews are complete](docs/reviews/README.md), with factual clarifications and numerical risks recorded. The [final direct-S² audit](docs/reviews/final_s2_audit.md) passed. Review the [Phase 1 spec draft](.scratch/rfmp-phase1/spec.md) and [ticket/test-interface plan](.scratch/rfmp-phase1/ticket_plan.md); TDD follows their approval.
 
 The follow-up [manifold implementation audit](docs/reviews/manifold_implementation_audit.md) reads the geometric-CBF controller/dynamics source and official RFM geometry code. The method now explicitly states its product manifold, tangent bundle, round metric, intrinsic training/filter interpretation and geometric diagnostics. The satellite reference is a mechanical SO(3) system; our approved scope remains a first-order generator on a product of S² factors.
 
@@ -37,3 +37,5 @@ Research notes:
 - [LASA FM/diffusion implementation decisions and evidence limits](docs/references/lasa_implementation_comparison.md).
 
 The research notes distinguish paper results, source availability and our proposed adaptations. They are not evidence of completed applicant project experience.
+
+Phase 1 environment checks found a working existing scientific Python environment with CPU execution and torch.func.jvp; CUDA is unavailable. No real LShape MAT file was found locally and shell download failed. This blocks real-data learning, not the first approved geometry ticket. No project tests or implementation have started.

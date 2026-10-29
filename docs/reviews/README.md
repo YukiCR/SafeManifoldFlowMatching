@@ -41,3 +41,7 @@ The [independent quotient-lift review](quotient_lift_independent.md) verified th
 ## Audit after selection
 
 The [selected-filter audit](selected_body_filter_audit.md) reviewed the updated methodology at `6165a5c3974f4f11c8f4f42d71b9aca5122c782b` and returned a **mathematical pass with no blockers**. It verified the exact chosen QP, internal/actual barrier distinction, horizontal lift, normalized metric, activation bypass, degenerate branches, projected update and failure gate. Two minor documentation findings are resolved: the frame evolves separately for each factor in generation time, and this index now distinguishes historical candidate evidence from current selection. Numeric settings, frame initialization and empirical feasibility remain unproven/unresolved. Specification and implementation remain on hold.
+
+## Final decision: direct S² supersedes the frame representation
+
+The applicant explicitly overrode the SO(3) choice. The [final direct-S² audit](final_s2_audit.md), against `f30e1f9`, passed with no methodology blocker. The intrinsic round-metric tangent QP, exponential integration, margin and failure accounting are sound for the limited empirical study. All SO(3) selection/review sections above are historical only. The applicant conditionally authorized Phase 1 spec/tickets/TDD after this audit; its concrete ticket/test-interface approval remains the workflow gate. Phase 2 is deferred. No study results are implied by this pass.
