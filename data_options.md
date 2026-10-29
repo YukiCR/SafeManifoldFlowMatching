@@ -2,6 +2,8 @@
 
 29 October 2026. **Decision: the applicant selected LASA LShape for initial trials.** The comparison below preserves the design rationale. No dataset has been downloaded, generated, transformed or used for training.
 
+**Later decision:** Phase 1 reimplements original RFMP's LASA method and inherits its documented settings. It uses 200-step demonstrations, observation-conditioned short position chunks and receding-horizon rollout. The original complete-trajectory proposal below is historical context; see the [current proposal](proposal.md) for the inherited settings and unresolved reproduction details.
+
 ## What the two choices contain
 
 **Synthetic spherical trajectories:** we define a small procedural family of complete pointing motions directly on S². Inputs might include start/goal directions, a curvature parameter and an approach style. A suitable construction would generate curved paths rather than only the shortest geodesic, and could provide multiple modes. The construction itself must be documented; it is not human demonstration data.
@@ -12,7 +14,7 @@ The important distinction is **controlled procedural variation versus recorded h
 
 ## How LASA would become spherical data
 
-One possible embedding, still a proposal, is:
+The earlier complete-trajectory discussion proposed the following embedding. It is **not verified as RFMP's exact mapping** and is not automatically inherited by the reproduction:
 
 1. Keep the temporal order of each planar demonstration and resample it to our chosen waypoint horizon.
 2. Center its terminal point at the planar origin.
@@ -37,11 +39,11 @@ RFMP's supplied paper includes an L-shape LASA example mapped to the sphere in F
 | Main limitation | Model may merely learn a simple hand-designed family | Few independent sequences; preprocessing can dominate behavior |
 | Application wording | Learning from synthetic pointing demonstrations | Learning from human handwriting demonstrations embedded on S² |
 
-## Whole-trajectory learning changes the sample count
+## Chunk learning and independent recordings
 
-One FM sample in our project is a **complete sequence**. Therefore, one LASA shape with seven recorded demonstrations provides seven original training examples before splitting, not 7,000 independent trajectory examples. The 1,000 stored points describe each demonstration's ordered path.
+One Phase 1 FM sample is now a **short future position chunk**, paired with RFMP's observation/context conditioning. Many training examples can be extracted from the seven original recordings, including overlapping chunks and different context pairs. They remain dependent samples from seven human demonstrations. The source dataset's 1,000 stored points are resampled to the paper's 200-step representation.
 
-Rotations, perturbations or other augmentation may help training, but do not create additional independent human recordings. Split by original demonstration before augmentation, so transformed versions of the same recording cannot appear in both training and test sets. With a small subset, frame results as a limited benchmark study rather than broad generalization evidence.
+RFMP reports an 80/10/10 split without an established split unit in the inspected description. Resolve that unit explicitly in the spec. A window split cannot support held-out-recording claims; a whole-demo split of seven recordings cannot exactly match those percentages and must be labeled as a deviation. Do not add rotations/perturbations as inherited settings without source evidence; any transforms must retain source-demo provenance.
 
 Synthetic data can supply many independent parameter draws, but its effective diversity is still limited by the generator's design. Generated quantity alone does not establish real-world generalization.
 
@@ -49,13 +51,13 @@ Synthetic data can supply many independent parameter draws, but its effective di
 
 Use **LASA LShape only** for the initial project. This prioritizes a recognizable recorded motion pattern with a clear sequence-imitation objective. Preserve the small-independent-sample limitation in evaluation and application wording.
 
-The initial trial does not establish multi-skill, multi-family or real-world robot generalization. Any augmentation must be labeled as augmentation and applied after splitting by original demonstration. Do not silently expand to additional LASA families or a synthetic training study.
+The initial trial does not establish multi-skill, multi-family or real-world robot generalization. Any augmentation must be labeled and must not undermine the declared split unit. Do not silently expand to additional LASA families or a synthetic training study.
 
 Avoid committing to two separate full training studies within 18 hours. Whichever source is chosen:
 
-- **Phase 1:** manifold FM only, using the selected source; preserve trained checkpoint, splits, preprocessing, configuration and baseline generations.
-- **Phase 2:** keep that validated model fixed and add generation-time safety steering under forbidden cones unseen during training. Pair baseline and safety-steered comparisons using the same source samples.
+- **Phase 1:** reimplement RFMP's LASA method on LShape without safety; preserve the checkpoint, exact split unit/indices, preprocessing, configuration, rollout initialization and baseline generations.
+- **Phase 2:** add generation-time safety steering. Retaining the same short chunks permits a frozen-checkpoint comparison; using a separate complete-trajectory model would require its own nominal baseline. The applicant's Phase 2 scope decision is pending.
 
 If LASA is selected, check and respect its published data-use terms before packaging artifacts. The official repository permits noncommercial academic use with attribution and places restrictions on modification/distribution; do not assume transformed datasets can be bundled in a public repository. No external release is currently requested.
 
-**Source decision is settled.** Mapping, split, conditioning and augmentation remain to be specified. Source selection is not yet approval to download/transform data, train a model or begin implementation.
+**Source and Phase 1 method decisions are settled.** Inherit RFMP's documented conditioning and training choices. Its exact mapping and split unit remain under-specified; resolve them explicitly. Source/method selection is not yet approval to download/transform data, train a model or begin implementation.

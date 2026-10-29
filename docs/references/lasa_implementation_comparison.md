@@ -2,6 +2,8 @@
 
 Checked 29 October 2026. Reading only; no implementation, installation, dataset generation, training or inference. This review does not approve project design choices.
 
+**Subsequent applicant decision:** Phase 1 reimplements RFMP's LASA method and inherits its documented choices. This supersedes the earlier complete-trajectory and hard-endpoint recommendations below for Phase 1. Phase 2's chunk-versus-complete-trajectory scope remains pending. See the [current proposal](../../proposal.md).
+
 ## Most relevant LASA comparison
 
 Braun, Jaquier, Rozo and Asfour's **Riemannian Flow Matching Policy for Robot Motion Learning** directly compares RFMP and Diffusion Policy on LASA, including spherical motions. Its Sections III–IV establish these choices:

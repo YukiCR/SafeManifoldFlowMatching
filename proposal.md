@@ -6,18 +6,18 @@
 
 Develop a compact, explainable project demonstrating **learning, manifold geometry, safety control and robotics** for the PhD application. A robotic camera/sensor/tool axis must produce a sequence of pointing directions on S² toward a target while respecting a forbidden angular cone at its generated waypoints.
 
-Primary references are **RFMP/SRFMP**, **From Bundles to Backstepping**, and **SAD-Flower**. Chen/Lipman's general Riemannian FM supplies foundational geometry and training machinery.
+Primary references are **RFMP**, **From Bundles to Backstepping**, and **SAD-Flower**. Phase 1 specifically reproduces the LASA method of Braun, Jaquier, Rozo and Asfour, *Riemannian Flow Matching Policy for Robot Motion Learning* (IROS 2024). The later RFMP/SRFMP article supplies context, not a requirement to implement SRFMP. Chen/Lipman's general Riemannian FM supplies foundational geometry and training machinery.
 
 ## Agreed decisions and boundaries
 
-- Generate a **whole trajectory**, rather than treating the FM integration trace of a single sphere point as the robot motion.
+- **Phase 1 reimplements RFMP and inherits its documented LASA decisions:** generate short position chunks on a product of spheres and reconstruct motions with a receding-horizon rollout. This user decision supersedes the earlier complete-trajectory formulation for Phase 1. The FM integration trace is still generation, not physical motion.
 - CBF correction acts **inside the FM generation process**. Downstream trajectory-following filtering is only a fallback if the preferred design cannot fit the time budget.
 - Use S² pointing; full SO(3), visual perception, torque dynamics and hardware deployment are outside the current scope.
 - **Connecting arcs can be unsafe.** Generated waypoint safety must not be reported as a guarantee for continuous interpolated motion.
 - **No dynamic-consistency guarantee.** Sphere membership and waypoint constraints do not establish physical state/action consistency.
-- Start the generated interior waypoints from **unconstrained sphere-valued noise** and recover waypoint safety by the end of generation, referring to SAD-Flower. Intermediate candidates may be unsafe. This replaces the earlier safe-initialization recommendation.
+- For Phase 2, start generated position coordinates from **sphere-valued noise unconstrained by the forbidden cone** and recover waypoint safety by the end of generation, referring to SAD-Flower. Intermediate candidates may be unsafe. This does not require uniform noise over the full sphere.
 - Maximum project work: **18 hours**, preserving headroom for the 30 October application.
-- Develop in two auditable phases: **Phase 1, manifold FM alone; Phase 2, add safety steering inside generation.** Establish a reproducible Phase 1 baseline before beginning Phase 2.
+- Develop in two auditable phases: **Phase 1, reproduce RFMP without safety; Phase 2, add safety steering inside generation.** Establish a reproducible Phase 1 baseline before beginning Phase 2. Whether Phase 2 retains the same short chunks or uses a separate complete-trajectory formulation is awaiting the applicant's decision.
 - Initial trials use **LASA LShape only**, mapped onto S². Do not expand to multiple families or switch to synthetic training data without agreement.
 - Manage the project with its own Git repository, **SafeManifoldFlowMatching**, at `application/SafeManifoldFlowMatching/`.
 
@@ -27,52 +27,71 @@ These decisions establish the direction. They do not yet authorize implementatio
 
 > Can a Riemannian flow-matching model generate learned pointing-motion sequences that satisfy previously unseen waypoint constraints through a generation-time geometric CBF layer, while retaining useful trajectory structure?
 
-The learning component should model complete, ordered motion demonstrations, including variation in path shape. Merely fitting an analytic point-to-goal attraction field would offer weak evidence of sequence learning.
+The learning component models observation-conditioned, ordered future position chunks. Longer motions emerge from repeated prediction and partial execution, following RFMP. Merely fitting an analytic point-to-goal attraction field would offer weak evidence of learned motion structure.
 
-The applicant selected the **LShape family from LASA** for initial trials. Map the recorded planar sequences onto S² with documented, training-only preprocessing. Train without the test-time forbidden cone, then introduce or move that cone during Phase 2 evaluation. Split by original demonstration before any augmentation; transformed versions of the same recording must not leak across splits. Conditioning, augmentation and split details remain grilling decisions.
+The applicant selected **LASA LShape only** for initial trials. Normalize and project recorded positions onto S², referring to the RFMP experiment. Train without the test-time forbidden cone, then introduce or move that cone during Phase 2 evaluation. Inherit documented RFMP settings; explicitly resolve under-specified mapping and split details in the specification. Do not add augmentation as if it were a reported paper decision.
 
-See [the data-source comparison](data_options.md). The selected LASA source provides human-drawn planar demonstrations requiring a documented sphere embedding. Because our samples are full sequences, seven demonstrations mean seven original sequence examples, not thousands of independent trajectories. The initial result should be presented as a small LShape pilot rather than broad generalization across skills or real robot pointing data.
+See [the data-source comparison](data_options.md). The selected source supplies seven original recordings. Extracting multiple chunks/context pairs creates more training examples, not more independent demonstrations. The initial result should be presented as an RFMP method reimplementation on the LShape subset, not a reproduction of all paper experiments or broad generalization to robot hardware.
 
 ## Agreed two-phase development structure
 
-**Phase 1 — manifold FM only.** Establish the chosen dataset and preprocessing, a sphere/product-manifold model, training and generation. Evaluate learning quality and sequence structure without a safety layer. Preserve the model checkpoint, source-demo train/validation/test split, preprocessing configuration, generation settings and fixed evaluation noise samples. Baseline diagnostics should include manifold adherence and held-out trajectory fidelity, so merely placing outputs on the sphere is not mistaken for successful learning. Exact acceptance criteria and test boundaries will be agreed in the spec.
+**Phase 1 — RFMP reimplementation, no safety.** Follow the inherited settings below for LASA positions on S². Validate both generated chunks and receding-horizon motion reproduction. Preserve the model checkpoint, exact split indices and split unit, preprocessing, configuration, rollout initialization and evaluation random states. Check manifold adherence, motion fidelity and roughness; report goal error rather than imposing it through endpoint pinning. Exact acceptance criteria and test boundaries will be agreed in the spec.
 
-**Phase 2 — safety inside generation.** Reuse the validated Phase 1 checkpoint and paired evaluation samples. Add terminal-recovery steering for new forbidden cones, then compare filtered and unfiltered generations. In the core comparison, do not retrain the model or change data preprocessing to obtain the apparent safety improvement. Record terminal waypoint violations, changes in trajectory fidelity/roughness, interventions, runtime and failure cases. Keep the acknowledged connecting-arc and dynamic-consistency limitations explicit.
+**Phase 2 — safety inside generation.** The recommended formulation adds terminal-recovery steering directly to the same RFMP chunk sampler and retains replanning; that scope decision is pending. It permits a frozen-model comparison against Phase 1. Use the same initial observations and random-seed schedule, and the same source samples for matched single-chunk comparisons. In multi-step rollouts, steered and nominal histories can diverge, so observation conditions need not remain identical. Do not retrain or change preprocessing to obtain an apparent safety improvement. If the applicant instead chooses a separate complete-trajectory formulation, record that model change and establish its own nominal baseline rather than claiming to reuse the short-chunk checkpoint unchanged. Record violations, motion fidelity/roughness, interventions, runtime and failure cases.
 
 Each phase proceeds through approved vertical tickets and TDD. Do not mix safety changes into Phase 1 or begin Phase 2 with an unvalidated nominal generator. This structure does not authorize implementation before proposal approval.
 
 Use small, coherent Git commits for approved work. Preserve the approved design/specification, and record a Phase 1 baseline commit before Phase 2 so safety changes can be audited independently. Keep checkpoints and datasets outside ordinary Git history by default; record their provenance, configuration and identifying hashes in reproducibility records. No remote/push is authorized merely by local version-control setup.
+
+## Inherited Phase 1 settings
+
+Source: [original RFMP paper, Sections III–IV](https://arxiv.org/html/2403.10672v1#S3). These are selected method settings for our LShape trial, not evidence of completed work.
+
+| Item | Phase 1 choice |
+| --- | --- |
+| Data | Seven LShape recordings, resampled to the paper's 200 time steps per recording |
+| Learned sample | Future position chunk on a product of S² factors |
+| Conditioning | Reference position `o_(τ-1)`, earlier context `o_c`, and separation `τ-c`; context selected as described in the paper |
+| Prediction/execution | Reported prediction horizon 8 and execution horizon half; precise point/transition indexing must be fixed consistently in the spec |
+| Source | Wrapped Gaussian at the north pole, reported scale σ=0.5; repeat one sampled source point across the chunk |
+| Target path | Coordinatewise geodesic conditional flow matching |
+| Model | MLP, reported five layers and 64 hidden units, Swish with learnable parameter |
+| Training | Adam, learning rate 1e-4; EMA decay 0.999; 200 epochs; select best validation model |
+| Split | Reported 80/10/10; split unit is not established by the accessible paper description |
+| Integration | Riemannian Euler; numerical step count must be resolved from sources or declared as our choice |
+| Rollout | Generate a chunk, use its initial execution portion as desired positions, update observations and replan |
+| Endpoints | No added hard start/goal pinning and no extra explicit final-goal conditioning |
+
+The initial study remains LShape only. The paper's other families, horizon sweeps, image conditioning, Euclidean comparison and diffusion baseline are not silently added to the agreed small-project scope. Any omitted experiments must be clear when describing the reproduction. The replicated source prior lies on a repeated-point subset of the chunk space; preserve it for reproduction and disclose changes rather than silently substituting independent per-waypoint noise.
+
+**Reproduction gaps:** the exact planar normalization/sphere mapping, split unit, layer-count convention, rollout bootstrap/context handling and integration resolution require source clarification or explicit specification choices. An 80/10/10 split cannot be interpreted as an exact whole-demonstration partition of only seven recordings. A grouped-demo split would be a declared deviation; a window split must not be described as held-out-recording generalization. Keep transforms of a recording traceable to their source.
 
 ## What one FM sample contains
 
 Let
 
 ```text
-X_s = [x_0(s), x_1(s), ..., x_H(s)],       x_i(s) in S².
+X_s = [x_τ(s), x_(τ+1)(s), ..., x_(τ+H)(s)],       x_i(s) in S².
 ```
 
-`s` is FM generation time. `i` indexes waypoints along the planned robot motion. Each FM integration step updates an entire candidate motion sequence. The **final candidate sequence** is the returned plan; intermediate candidates are not executed motions.
+`s` is FM generation time. `τ` is the current rollout index; `i` indexes desired positions within the predicted chunk. The displayed inclusive indexing follows the paper's notation; the spec must settle whether the horizon parameter counts positions or transitions. Each integration step updates the candidate chunk jointly. At the end of generation, only its initial execution portion advances the rollout; intermediate FM candidates are not executed motions.
 
-Recommend fixing `x_0=x_start` and `x_H=x_goal` and generating only the interior sequence on `(S²)^(H-1)`. Endpoint conditioning/pinning is a proposed design choice to confirm. It establishes planned endpoints, not physical closed-loop convergence.
+Observation conditioning initializes reproduction from a supplied position/history. It does not clamp a generated chunk's first or last position. The earlier hard-start/goal recommendation is superseded for Phase 1. Our direction sequences serve as desired-position commands; they are not angular-velocity commands. [LASA implementation review](docs/references/lasa_implementation_comparison.md)
 
-Reference check: SAD-Flower Remark 4.1 explicitly holds the initial state fixed during generation; its Maze2d setup in Appendix F conditions on **both start and goal**. The released conditioning helper sets the specified state coordinates, and its ODE solvers zero their generation derivatives. This supports the proposed two-endpoint planning formulation. RFMP instead generates an observation-conditioned action horizon without the same explicit endpoint-pinning construction. The project decision is still pending. [SAD-Flower Appendix F](https://arxiv.org/html/2511.05355v3#A6), [conditioning helper](https://github.com/TzuYuan107/sad-flower/blob/main/gflower/models_flow/flow_matcher.py), [conditioned solvers](https://github.com/TzuYuan107/sad-flower/blob/main/gflower/models_flow/flow_policy.py).
-
-RFMP Section IV-A generates an action horizon, and SAD-Flower Sections 3–5 generate complete state/action trajectories. Our direction sequences can serve as planned states or desired-direction commands. Their role must be stated explicitly; a manifold-valued action need not be an angular velocity. [RFMP/SRFMP](https://arxiv.org/html/2412.10855v3#S4.SS1), [SAD-Flower](https://arxiv.org/html/2511.05355v3#S3)
-
-The [LASA implementation review](docs/references/lasa_implementation_comparison.md) further distinguishes paper-reported choices from inspected source. Original LASA RFMP and its diffusion comparison generate position-valued short chunks conditioned on observation history, then replan. Our complete-sequence formulation is an explicit adaptation. The reviewed LASA evidence does not establish hard start-and-goal pinning as RFMP's convention; the proposed boundary constraints follow our planning objective and SAD-Flower. Endpoint approval remains pending.
+SAD-Flower's complete state/action planning and its endpoint conditioning remain reference material for Phase 2 generation-time control. They must not be imported into Phase 1 as if they were RFMP decisions. [SAD-Flower](https://arxiv.org/html/2511.05355v3#S3)
 
 ## Proposed model and manifold geometry
 
-Construct RFM training interpolations coordinatewise using sphere geodesics. Sum component errors using the product Riemannian metric. A small sequence-aware model produces one tangent vector per generated waypoint, with each output projected into that waypoint's tangent space:
+Construct RFM training interpolations coordinatewise using sphere geodesics. Sum component errors using the product Riemannian metric. Use the paper's MLP on the joint chunk and conditioning, producing one tangent vector per generated position, projected into its tangent space:
 
 ```text
 P_x = I - xxᵀ
 V_theta,i(s,X,o) = P_x_i F_theta,i(s,X,o)
 ```
 
-Here `o` is the agreed start/goal/task conditioning. The model should see the sequence jointly rather than treating every waypoint as an unrelated training example. Sphere exp/log formulas, coincident points, antipodal ambiguity, endpoint pinning and target derivatives require explicit handling in the later specification. [Riemannian FM](https://arxiv.org/abs/2302.03660)
+Here `o` is RFMP's observation/context conditioning. Sphere exp/log formulas, coincident points, antipodal ambiguity and target derivatives require explicit handling in the specification. Do not introduce hard endpoint masks. [Riemannian FM](https://arxiv.org/abs/2302.03660)
 
-SRFMP provides a possible stability-oriented comparison through augmented pseudo-time and exponentially contracting conditional paths. Its stability concerns the generative distribution. An approximate learned field and its CBF-corrected version do not automatically inherit exact convergence. The supplied paper also has direction/tangent-anchor notation inconsistencies; derive targets from the intended path. Whether stable FM is mandatory or a time-boxed extension remains open. [Detailed reading](docs/references/flow_matching_and_stability.md)
+SRFMP is outside the selected Phase 1 reproduction and is not a mandatory additional model. Its stability concerns the generative distribution, not robot task convergence. An approximate learned field and its CBF-corrected version do not automatically inherit exact convergence. [Detailed reading](docs/references/flow_matching_and_stability.md)
 
 ## Generation-time geometric CBF layer
 
@@ -82,7 +101,7 @@ The generated sequence follows
 dX_s/ds = V_theta(s,X_s,o) + U_s.
 ```
 
-For a static forbidden direction `c∈S²` and cone half-angle `theta`, each generated interior waypoint has
+For a static forbidden direction `c∈S²` and cone half-angle `theta`, each generated position has
 
 ```text
 h_i(X) = cos(theta) - cᵀx_i
@@ -104,7 +123,7 @@ For one independent cap constraint per waypoint, an unbounded minimum-norm tange
 U_i = max(0, -(a_iᵀV_theta,i + phi(s) h_i)/||a_i||²) a_i.
 ```
 
-Handle the zero-gradient branch and pinned endpoints explicitly. This simple, separable correction is attractive under the time budget, provided no additional coupled constraints are silently assumed. It applies the geometric CBF paper's first-order bundle formulation; it does not reproduce torque-level backstepping. [Geometric CBF paper](https://arxiv.org/abs/2510.20202v1)
+Handle the zero-gradient branch explicitly. This simple, separable correction is attractive under the time budget, provided no additional coupled constraints are silently assumed. It applies the geometric CBF paper's first-order bundle formulation; it does not reproduce torque-level backstepping. Whether it acts on RFMP chunks or a separate complete-trajectory generator awaits the Phase 2 scope decision. [Geometric CBF paper](https://arxiv.org/abs/2510.20202v1)
 
 ### Selected initialization and terminal objective
 
@@ -114,11 +133,11 @@ SAD-Flower uses an initial unsteered phase and a controlled phase with prescribe
 
 The finite-step implementation must specify terminal stopping, residual tolerances and failure reporting. A possible practical design is a tightened internal forbidden cone to retain a margin at the actual constraint; it remains a design proposal, not an established guarantee. At the forbidden center, the spherical barrier gradient vanishes while an unsafe-recovery inequality can demand a positive derivative, so recovery feasibility must not be asserted for every source sample. Near-degenerate cases and any retries/rejections must be visible in the evaluation.
 
-If start/goal endpoints are pinned as proposed, both must be outside the forbidden cone; unsafe pinned endpoints would make the task infeasible. The claim sought is about the final generated waypoint sequence, not intermediate candidate safety or connecting arcs.
+For a chunk-based extension, the supplied current direction should already be safe for any claimed safe rollout. Making the generated chunk safe cannot repair the previously supplied current direction or guarantee that the connection to the first commanded position avoids the cone. The claim sought concerns generated positions at the end of FM generation, not intermediate candidates or connecting arcs. No fixed physical endpoint constraints are part of Phase 1.
 
 ## What the project will and will not establish
 
-Evaluate final waypoint clearance, sphere norm/tangency errors, planned endpoint accuracy, demonstration/sequence fidelity, interventions and runtime. Also measure roughness or adjacent angular jumps so safety obtained by destroying useful motion structure is visible.
+Evaluate generated-position clearance, sphere norm/tangency errors, rollout terminal-goal error, demonstration/motion fidelity, interventions and runtime. Distinguish a chunk's last point from the final task goal; intermediate chunks are not supposed to reach that goal. Also measure roughness or adjacent angular jumps so safety obtained by destroying useful motion structure is visible.
 
 Connecting arcs can enter the cap even when every waypoint is safe. We will explicitly report that limitation. A diagnostic of interpolated clearance is recommended if inexpensive, but continuous-path constraint enforcement is not an agreed core requirement. Geometry-preserving integration does not remove this gap.
 
@@ -132,7 +151,7 @@ Recommended core comparisons:
 2. The same trained generator with generation-time geometric CBFs, using matched seeds and source samples.
 3. A simple geometric reference or post-hoc waypoint repair baseline, if it adds a clear comparison within the budget. Any repair must be disclosed and must not be used to conceal residual violations of the proposed generator.
 
-Optional comparisons include stable versus ordinary RFM and stricter/new cone locations. Decide model variants and metrics before running experiments. Preserve failed generations and rejected samples in the accounting.
+Optional comparisons include stricter/new cone locations. Adding SRFMP or another model is outside Phase 1's selected reproduction and requires a scope decision. Decide metrics before running experiments. Preserve failed generations and rejected samples in the accounting.
 
 Proposed outputs: reproducible source/configuration, a visualization of a candidate sequence changing during FM generation, a final-waypoint animation with the arc-safety limitation visible, evaluation plots/table and a short technical note. A CV entry must describe work actually completed and understood by the applicant, with no invented improvement percentages or guarantees.
 
@@ -163,4 +182,4 @@ Detailed paper readings: [flow matching/stability](docs/references/flow_matching
 
 Proposed hard stop is 30 October 10:00 China time or earlier, retaining the rest of the day for application preparation. Confirm the cutoff during grilling. Research for this proposal began about 15:58 China time on 29 October. Do not consume the entire budget merely because it is available.
 
-Follow **grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed boundaries**. Current open decisions include endpoint conditioning, preprocessing/splits/augmentation, mandatory model variants, evaluation thresholds and the hard stop. LASA LShape, Git management and terminal-recovery initialization are agreed. No project implementation, tests, generated data, model training or experiments are approved yet.
+Follow **grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed boundaries**. Phase 1's RFMP method and documented decisions are selected; hard endpoint pinning and a separate whole-trajectory model are superseded for that phase. Remaining decisions include Phase 2 chunk-versus-complete-trajectory scope, under-specified reproduction details, evaluation thresholds and the hard stop. LASA LShape, Git management and terminal-recovery initialization are agreed. No project implementation, tests, generated data, model training or experiments are approved yet.
