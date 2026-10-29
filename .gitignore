@@ -16,6 +16,7 @@ data/
 checkpoints/
 runs/
 artifacts/
+*.mp4
 
 # Internal preparation records belong to the local private branch
 docs/
