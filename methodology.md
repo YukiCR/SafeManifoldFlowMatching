@@ -1,6 +1,6 @@
 # SafeManifoldFlowMatching: core methodology for review
 
-29 October 2026. **Proposal approved; applicant selected the body-coordinate geometric CBF QP below. Applicant review of the complete methodology continues; specification and tickets remain explicitly on hold.** No project code, tests, dataset preparation, model training or experiments have been performed. See the [review summary and reports](docs/reviews/README.md).
+29 October 2026. **Final applicant decision: all learning, generation-time CBF steering and integration stay directly on S²/product S², using intrinsic geometric language. This explicitly supersedes the SO(3) frame/body-coordinate decision.** Re-audit this final formulation; if sound, the applicant authorizes progressing to Phase 1 specification, tickets and TDD through the agreed workflow. No project code, tests, dataset preparation, training or experiments have yet been performed. See the [review summary](docs/reviews/README.md).
 
 ## 1. Purpose and scope
 
@@ -9,7 +9,7 @@ Demonstrate learning, manifold geometry, safety control and robotics through a s
 - Initial data: **LASA LShape only**, human handwriting positions embedded on S²; not recorded robot pointing data.
 - **Phase 1:** reimplement the original RFMP LASA method, inheriting its documented choices.
 - **Phase 2:** freeze that validated model; add generation-time geometric CBF steering to the same position chunks and retain the replanning loop.
-- **Selected safety filter:** the minimum-change QP in body coordinates on an SO(3)/SO(2) horizontal frame lift, with `b_i=-e3×(R_i^T c)`. Frames represent the existing S² directions; RFMP remains direction-valued.
+- **Final selected safety filter:** minimum-change tangent-velocity QP directly on S², using the barrier differential and round-metric gradient. No rotation frames, Lie-algebra lift or roll variables are part of the active method.
 - No physical robot, full SO(3), torque dynamics, learned dynamics model, dynamic-consistency CLF, hard goal pinning or mandatory SRFMP.
 - **At most 18 hours including preparation**, with the approved project hard stop of **30 October 2026, 09:45 China time**, or earlier if the budget is exhausted. Preserve application preparation time before the 30 October deadline.
 
@@ -79,7 +79,7 @@ L = E[ ||V_theta(s,X_s|o)-W_s||²_(g_(X_s)) ].
 
 Both regression vectors live at `X_s`, so their subtraction is well typed and needs no parallel transport. Differentiating the source-to-data geodesic by JVP is a verified reference construction. Do not substitute a vector anchored at `X_noise` or `X_data` without the required map/transport. The loss's normalization remains a reproduction detail.
 
-The exponential Euler form is `X_next=Exp_X(ds*V)` (use `V+U` when steering). Per-factor normalized ambient Euler is a different, retraction-based update. Both must be named accurately; the generic RFM repository has several integration configurations and does not verify which original RFMP implementation was used. Phase 1's exact solver realization/resolution remains unresolved; the selected Phase 2 frame update is given below and requires a matched-update nominal comparison if it differs. Coincident points and antipodal/cut-locus cases also require handling; neither update certifies discrete barrier satisfaction.
+The exponential Euler form is `X_next=Exp_X(ds*V)` (use `V+U` when steering). Per-factor normalized ambient Euler is a different, retraction-based update. Both must be named accurately; the generic RFM repository has several integration configurations and does not verify which original RFMP implementation was used. Phase 1's exact solver realization/resolution remains unresolved; the selected Phase 2 sphere exponential update is given below and requires a matched-update nominal comparison if it differs. Coincident points and antipodal/cut-locus cases also require handling; neither update certifies discrete barrier satisfaction.
 
 Do not substitute an analytic goal-attraction field for learning, independent noise at every waypoint for the repeated-point prior, or a new sequence architecture for the inherited MLP. Any required deviation must be disclosed rather than presented as an RFMP choice.
 
@@ -107,7 +107,7 @@ dX_s/ds = V_theta(s, X_s | o_k) + U_s.
 
 `U` is a virtual tangent correction to the sampler, not a physical robot velocity or torque. Apply constraints to **all predicted positions**, including the unused tail.
 
-This equation is the projected S² description. The selected Phase 2 computation uses the body-coordinate QP below on auxiliary frames, followed by projection `x_i=R_i e3`; the learned field and conditioning remain unchanged on S².
+This is the operative generator directly on the product of spheres. All nominal and correction vectors live in the same tangent fiber. The former SO(3) representation is superseded and is not an implementation requirement.
 
 ### Actual constraint and approved internal margin
 
@@ -135,71 +135,39 @@ dH_i|_X[V+U] = g_X(grad_g H_i, V+U)
 
 The displayed projection formula for `a_i` is the round-metric Riemannian gradient, not a metric-independent recipe. A mechanical inertia metric or a different input distribution requires a new gradient/control-adjoint derivation; neither is silently imported from the satellite example.
 
-### Selected geometric CBF QP on the SO(3)/SO(2) lift
+### Final selected geometric CBF directly on S²
 
-**Selected by the applicant.** Write `x_i=R_i e3` and evolve `dR_i/ds=R_i hat(Omega_i)`. The body rate is a virtual generation rate. This is our first-order specialization of geometric CBF machinery, not reproduction of the satellite's physical backstepping controller. Full attitude/roll learning and physical torque dynamics remain outside scope. Frame initialization is still unresolved.
-
-Let `pi(R)=R e3`. Its fiber is `R SO(2)`, with the stabilizer understood as rotations fixing `e3`; thus `SO(3)/SO(2) ≅ S²`. For a chunk, the frame space `(SO(3))^m` is an auxiliary lift of `(S²)^m`. Use the normalized bi-invariant metric
-
-```text
-g_R(R hat(u), R hat(v)) = u^T v
-                       = (1/2) tr[(R hat(u))^T (R hat(v))].
-```
-
-The horizontal input space has `Omega^T e3=0`. With `hat(u)v=u×v`, define
-
-```text
-h_i(R_i) = cos(theta_int) - c^T R_i e3,
-b_i = -e3 × (R_i^T c),
-d h_i|_(R_i)[R_i hat(Omega_i)] = b_i^T Omega_i,
-grad h_i(R_i) = R_i hat(b_i).
-```
-
-These are a differential/metric gradient on SO(3), with `b_i` the body-coordinate representation of the differential. Lift the existing RFMP tangent prediction horizontally:
-
-```text
-Omega_theta,i = R_i^T(x_i × v_theta,i),
-R_i hat(Omega_theta,i) e3 = v_theta,i.
-```
-
-During the controlled generation interval, solve the selected per-position problem:
+For each predicted waypoint, the frozen RFMP model supplies `v_theta,i in T_(x_i) S²`. During the controlled generation interval solve
 
 $$
 \begin{aligned}
-\Omega_i^\star
-&=\arg\min_{\Omega_i\in\mathbb R^3}
-\frac12\|\Omega_i-\Omega_{\theta,i}\|^2,\\
-\text{subject to}\quad b_i^\top\Omega_i
-&\ge-\phi(s)h_i(R_i),
-\qquad b_i=-e_3\times(R_i^\top c).
+v_i^\star &= \arg\min_{v_i\in T_{x_i}S^2}
+\frac12\|v_i-v_{\theta,i}\|_{g_{x_i}}^2,\\
+\text{subject to}\quad
+ dh_i|_{x_i}[v_i]
+ &= g_{x_i}(a_i,v_i)\ge-\phi(s)h_i,
+\qquad a_i=\operatorname{grad}_{S^2}h_i.
 \end{aligned}
 $$
 
-The norm is the body Euclidean norm induced by the normalized SO(3) metric above. Because constraints and costs separate by position, each problem has a closed form; a general QP dependency is not intrinsically required. The nominal learned field still couples the joint chunk. For `b_i != 0`,
+The metric, tangent-space constraint and differential make this a geometric CBF. With the canonical round metric, `g_(x_i)(a_i,v_i)=a_i^T v_i` in ambient coordinates. The optimization is over a two-dimensional tangent space even though vectors use three stored coordinates.
+
+One cap and independent unbounded tangent inputs make the product-manifold problem separate by waypoint. The learned nominal field still couples the joint chunk. For `a_i!=0`,
 
 ```text
-lambda_i = max(0, (-b_i^T Omega_theta,i - phi(s)*h_i)/||b_i||²),
-Omega_star,i = Omega_theta,i + lambda_i*b_i,
-R_i^+ = R_i exp(ds*hat(Omega_star,i)),
-x_i^+ = R_i^+ e3.
+lambda_i = max(0, (-g_(x_i)(a_i,v_theta,i)-phi(s)*h_i)/g_(x_i)(a_i,a_i)),
+v_star,i = v_theta,i+lambda_i*a_i,
+U_i = v_star,i-v_theta,i,
+x_i^+ = Exp_(x_i)(ds*v_star,i).
 ```
 
-Before guidance activation, use `Omega_star,i=Omega_theta,i` without applying the QP. Setting `phi=0` while still enforcing its inequality would constrain the nominal flow and is not the unsteered interval.
+This is the selected computation, not merely an equivalence check. No rotation matrices, frame initialization, body velocities or roll variables are needed. A general QP dependency is not intrinsically required because the displayed closed form solves the single-cap tangent QP.
 
-When `b_i=0`, retain the nominal rate only if the scalar inequality is already satisfied; otherwise the QP is infeasible. In particular, positive-gain recovery at `x_i=c` is infeasible, whereas `x_i=-c` is safe. Near-zero-gradient thresholds and finite numerical limits remain unresolved; denominator clipping alone does not solve the original constraint.
+Before guidance activation, bypass the QP and use `v_star,i=v_theta,i`. Applying the inequality with `phi=0` would still constrain the nominal field. At `a_i=0`, keep the nominal velocity only if the scalar inequality is already satisfied; otherwise declare infeasibility. At the unsafe center `x_i=c`, positive-gain recovery is infeasible; at the safe antipode `x_i=-c`, zero correction is feasible. A near-zero threshold and finite numerical limits remain to be specified; denominator clipping alone does not solve the original constraint.
 
-Both `Omega_theta,i` and `b_i` are horizontal, so the optimizer is horizontal even without adding an explicit horizontal constraint to this particular QP. If `a_i=-(I-x_i x_i^T)c`, then `b_i=R_i^T(x_i×a_i)`, `||b_i||=||a_i||`, and `b_i^T Omega_theta,i=a_i^T v_theta,i`. The S² formula is retained as a verification identity: projection gives `v_star,i=v_theta,i+lambda_i*a_i`, not a competing selected filter. Moreover the frozen-vector update obeys `R_i exp(ds*hat(Omega_star,i))e3=Exp_(x_i)(ds*v_star,i)` in exact arithmetic. This is equivalence to **exponential Euler**, not to every possible Riemannian integrator or to the exact time-varying ODE solution.
+The sphere exponential step preserves the chosen manifold in exact arithmetic, not discrete barrier satisfaction. If Phase 1's numerical update differs, preserve the original baseline and compare the steered sampler with an unsteered sampler using the same update/grid/stopping protocol. Unconstrained source noise, internal-cone margin, execution-portion stopping and all previously acknowledged safety limitations remain selected.
 
-Important qualifications:
-
-- Call this a **horizontal or zero-axial-spin lift**, not globally zero roll. `Omega^T e3=0` permits geometric holonomy: a closed pointing loop can return with a different frame rotation.
-- There is no global smooth choice `R=R(x)` over all S². Choose an initial frame by a documented local/branched rule and carry the frame along each generation solve; do not assume a globally smooth roll convention. Different initial fiber rotations produce the same pointing updates under the equivariant lift/filter. The learned network still sees S² directions/context, not arbitrary frame axes.
-- Each `R_i` is propagated in **generation time for its own predicted waypoint**. This does not prescribe roll continuity or parallel transport between successive physical waypoint indices; the returned task motion is still the S² direction sequence.
-- Initialize frames over the unchanged Phase 1 S² prior samples, rather than introducing a new SO(3) training/prior distribution or roll labels. If Phase 1 used a different integration update, retain the matched-update nominal comparison before attributing differences to steering.
-- The barrier remains degenerate at `x=±c`; lifting does not cure center infeasibility, near-center ill-conditioning, finite-step recovery error or stalls. Retain the approved margin, actual-cone check and stopping rule.
-- The metric normalization is essential to the displayed gradient. A generic inertia-weighted metric changes the gradient/weighted correction and may not preserve this round-sphere equivalence. The satellite's physical backstepping law is not inherited.
-
-Full algebra and prior independent verification: [quotient-lift audit](docs/reviews/quotient_lift_independent.md). That report reviewed the formulation when it was a candidate; the applicant has now selected it. A subsequent [audit of the updated selected method](docs/reviews/selected_body_filter_audit.md) found no mathematical blocker, and its two terminology/status clarifications are incorporated here and in the review index. Primary background on horizontal lifts, global sections and holonomy: [Welde and Kumar, Section III-B, Proposition 2 and Remark 2](https://arxiv.org/html/2403.04900v2#S3.SS2). This background does not add a tracking controller to our scope.
+The previous horizontal-frame derivation is retained only as [historical equivalence evidence](docs/reviews/quotient_lift_independent.md). It does not add a second active formulation or require SO(3) operations.
 
 ### Terminal recovery and its limits
 
@@ -227,7 +195,7 @@ Continue to constrain the full chunk. An unused-tail violation is a whole-chunk 
 
 Interpret these diagnostics geometrically: spherical geodesic distance for goal error, adjacent jumps and paired-position displacement; product metric norm for intervention size; per-factor unit-norm and tangency residuals for geometry checks. If roughness compares velocity vectors based at different points, first bring them to a common tangent space by a stated transport, or state an intrinsic common-base-point construction. Raw ambient velocity subtraction is not an intrinsic acceleration. Distance between positions alone requires no tangent transport. Exact diagnostic formulas remain to be selected later.
 
-For the selected frame formulation, also record rotation orthogonality/determinant validity, horizontal-rate residual, and the scalar QP residual `b_i^T Omega_star,i+phi(s)h_i`. The body correction norm equals the S² intervention norm under the selected metric/horizontal lift. These distinguish geometry and differential-constraint diagnostics from the actual-cone final-position check.
+Record the scalar differential-constraint residual `g_(x_i)(a_i,v_star,i)+phi(s)h_i`, tangent residuals and product-metric correction norm. Distinguish these diagnostics from the actual-cone final-position check; no rotation/frame diagnostics are needed.
 
 Zero unsafe executed points obtained solely by stopping is not evidence that CBF steering improved generation. Distinguish goal-reaching completion from merely exhausting a rollout horizon; retain last-accepted goal error for failures. Do not assess fidelity only on favorable survivors or retain only favorable cone placements. Freeze final scenarios, tuning/evaluation separation and thresholds before the final comparison; the conflicting cap should affect returned waypoints, not only connecting arcs. Goal reaching is measured, not guaranteed by a CLF or a pinned endpoint. Preserve actual source draws or an index-based draw schedule so stopped runs do not shift later pairings.
 
@@ -243,6 +211,6 @@ Standalone reviewers should independently assess:
 - Do the acceptance rule and metrics separate sampler improvement from stopping, geometry adherence and goal progress?
 - Which issues are actual methodology blockers, and which are ordinary choices for a later specification?
 
-Review reports are advisory findings, not new applicant decisions. **The applicant reviews this method before any specification or tickets proceed.** No code, tests, simulations, dataset preparation, training or experiments are authorized by this document or the reviews. Detailed background: [proposal](proposal.md), [Phase 2 derivation](methodology_phase2.md), [reference notes](docs/references/flow_matching_and_stability.md).
+Review reports are advisory findings, not new applicant decisions. **The latest user instruction authorizes Phase 1 specification/tickets and then TDD if the final S² re-audit is sound, using the agreed ticket/test-interface approval workflow.** Phase 2 implementation is not authorized by that conditional Phase 1 instruction. Detailed background: [proposal](proposal.md), [Phase 2 derivation](methodology_phase2.md), [reference notes](docs/references/flow_matching_and_stability.md).
 
 Additional implementation-level audit: [geometric-CBF code and manifold interpretation](docs/reviews/manifold_implementation_audit.md), with an independent [official RFM source audit](docs/reviews/rfm_implementation_geometry.md). These make the existing round/product geometry explicit; they do not add a physical controller, numerical defaults or a new algorithm family.

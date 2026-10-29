@@ -1,6 +1,6 @@
 # Proposal: generation-time geometric CBFs for Riemannian motion sequences
 
-29 October 2026. **Proposal approved by the applicant. Specification and tickets are explicitly on hold for standalone-agent and applicant review of [methodology.md](methodology.md). Implementation remains unapproved.**
+29 October 2026. **Proposal approved; final direct-S² choice supersedes the SO(3) variant. Applicant conditionally authorizes Phase 1 specification/tickets and TDD after a sound final audit and workflow approvals.**
 
 ## Purpose
 
@@ -98,7 +98,7 @@ SRFMP is outside the selected Phase 1 reproduction and is not a mandatory additi
 
 ## Generation-time geometric CBF layer
 
-**Selected-filter update:** the applicant selected the body-coordinate QP `min_(Omega_i) (1/2)||Omega_i-Omega_theta,i||²` subject to `b_i^T Omega_i>=-phi(s)h_i`, with `b_i=-e3×(R_i^T c)`, `h_i=cos(theta_int)-c^T R_i e3`, and `Omega_theta,i=R_i^T(x_i×v_theta,i)`. Use the normalized SO(3) metric and horizontal auxiliary frame, preserving the S² RFMP model. The canonical derivation and geometric update are in [methodology.md](methodology.md). The S² formulas below are its equivalent projected description, not an alternative selected filter. Numerical settings and frame initialization remain unresolved; specification and implementation remain on hold.
+**Final selected-filter update:** all computation stays directly on S²; the applicant explicitly overrides the SO(3) lift decision. Minimize `(1/2)||v_i-v_theta,i||²_(g_(x_i))` over `v_i in T_(x_i)S²`, subject to `dh_i[v_i]=g_(x_i)(grad h_i,v_i)>=-phi(s)h_i`, with `h_i=cos(theta_int)-c^T x_i`. Use the tangent closed-form correction and sphere exponential update in [methodology.md](methodology.md). No frame or roll variables are active. After a sound re-audit, Phase 1 may proceed through specification, ticket approval and TDD; Phase 2 remains deferred.
 
 The generated sequence follows
 

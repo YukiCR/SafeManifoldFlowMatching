@@ -1,6 +1,6 @@
 # Phase 2 methodology proposal
 
-29 October 2026. **Proposal approved; specification and tickets explicitly on hold for standalone-agent and applicant review of [the consolidated core methodology](methodology.md). No implementation approval.** The applicant approved retaining RFMP's same position-chunk horizons and replanning loop, steering each FM generation solve while freezing the Phase 1 model; a slightly expanded internal forbidden cone; and stopping on an unsafe next execution portion. Exact numerical settings and evaluation thresholds remain unresolved. Undocumented Phase 1 reproduction details must be explicit.
+29 October 2026. **Final direct-S² method selected; Phase 2 implementation remains deferred. The latest instruction conditionally authorizes Phase 1 after the final method re-audit and workflow gates.** The applicant approved retaining RFMP's same position-chunk horizons and replanning loop, steering each FM generation solve while freezing the Phase 1 model; a slightly expanded internal forbidden cone; and stopping on an unsafe next execution portion. Exact numerical settings and evaluation thresholds remain unresolved. Undocumented Phase 1 reproduction details must be explicit.
 
 ## Objective and scope
 
@@ -16,44 +16,29 @@ At physical rollout index `k`, keep the observation history `o_k` fixed througho
 dX_s/ds = V_theta(s, X_s | o_k) + U_s.
 ```
 
-Both the nominal field and projected correction belong to the product tangent space. The selected Phase 2 frame update below projects to exponential Euler; preserve the original Phase 1 sampler and add a matched-update nominal comparison if its solver differs. A generation step changes a candidate chunk; it does not advance the robot's physical rollout.
+Both the nominal field and projected correction belong to the product tangent space. The selected Phase 2 update is sphere exponential Euler; preserve the original Phase 1 sampler and add a matched-update nominal comparison if its solver differs. A generation step changes a candidate chunk; it does not advance the robot's physical rollout.
 
 After generation, check every direction in its RFMP execution portion against the actual requested cone before advancing. If that portion passes, it advances the position-command rollout; update observation history and repeat. If any direction in that portion is unsafe, reject the entire portion, keep the last accepted direction and count a failed rollout. The virtual correction `U` is not a physical angular velocity or torque command.
 
-## Selected geometric CBF in body coordinates
+## Final selected geometric CBF directly on S²
 
-The applicant selected the SO(3)/SO(2) horizontal-frame filter. Keep RFMP direction-valued, represent each generated direction by `x_i=R_i e3`, and use the normalized metric `g_R(R hat(u),R hat(v))=u^T v`. For unit forbidden direction `c`, requested angle `theta` and approved expanded angle `theta_int=theta+delta`, define
-
-```text
-h_actual,i = cos(theta) - c^T R_i e3,
-h_i = cos(theta_int) - c^T R_i e3,
-b_i = -e3 × (R_i^T c),
-Omega_theta,i = R_i^T(x_i × v_theta,i),
-grad h_i(R_i) = R_i hat(b_i),
-dh_i/ds = b_i^T Omega_i.
-```
-
-During the controlled interval, solve exactly the selected minimum-change problem:
+The applicant's final decision supersedes the SO(3) lift: keep all computation directly on S² with its round metric. For requested angle `theta`, internal angle `theta_int=theta+delta` and unit forbidden center `c`,
 
 ```text
-minimize_(Omega_i in R³) (1/2) ||Omega_i-Omega_theta,i||²
-subject to b_i^T Omega_i >= -phi(s)*h_i.
+h_actual,i = cos(theta)-c^T x_i,
+h_i = cos(theta_int)-c^T x_i,
+a_i = grad_S² h_i = -(I-x_i x_i^T)c.
 ```
 
-The problems separate by position. For `b_i!=0`, the closed-form solution and geometric update are
+During guidance, minimize `(1/2)||v_i-v_theta,i||²_(g_(x_i))` over `v_i in T_(x_i)S²`, subject to `dh_i[v_i]=g_(x_i)(a_i,v_i)>=-phi(s)h_i`. The exact single-cap solution for `a_i!=0` is
 
 ```text
-lambda_i = max(0, (-b_i^T Omega_theta,i-phi(s)*h_i)/||b_i||²),
-Omega_star,i = Omega_theta,i+lambda_i*b_i,
-R_i^+ = R_i exp(ds*hat(Omega_star,i)),
-x_i^+ = R_i^+ e3.
+lambda_i = max(0, (-g_(x_i)(a_i,v_theta,i)-phi(s)*h_i)/g_(x_i)(a_i,a_i)),
+v_star,i = v_theta,i+lambda_i*a_i,
+x_i^+ = Exp_(x_i)(ds*v_star,i).
 ```
 
-Before activation, bypass the QP and use the nominal rate; enforcing its inequality with `phi=0` would still constrain the flow. At `b_i=0`, keep nominal only when the scalar inequality is already feasible; otherwise report infeasibility. Do not cure this by denominator clipping.
-
-The nominal lift and correction are horizontal (`Omega^T e3=0`), so projection reproduces the round-metric S² tangent filter and exponential-Euler step. The original S² expression is a verification identity, not a second selected algorithm. Frame initialization has no global smooth section; retain an initial local/branched frame and propagate it within generation. Each waypoint's frame evolves in generation time, without prescribing roll continuity across physical waypoint indices. Horizontal motion means zero instantaneous axial spin, not globally zero roll. No SO(3) roll training or new SO(3) prior is introduced. These virtual rates are not physical angular-velocity commands or torques.
-
-Although filtering separates by position, the learned nominal field still sees the joint chunk. This formulation uses no correction-speed bound and establishes no physical actuator feasibility. Its derivation follows the [geometric CBF framework](https://arxiv.org/abs/2510.20202v1); the schedule follows [SAD-Flower, Section 5](https://arxiv.org/html/2511.05355v3#S5). See the [complete core method](methodology.md) for the metric, quotient, equivalence proof and limitations.
+Before activation bypass the QP, rather than imposing it with zero gain. At zero gradient, retain nominal only if the inequality is already feasible; otherwise report infeasibility. Do not cure infeasibility by denominator clipping. No rotation frames, Lie-algebra rates or roll variables are used. The nominal network, source prior, observation conditioning and replanning remain unchanged. See the [core methodology](methodology.md) for geometric meanings and limitations.
 
 ## Terminal recovery and finite-step behavior
 
@@ -92,4 +77,4 @@ Use terminal goal error as an outcome, not as a hard safety constraint or an imp
 
 The intended result concerns **sampled directions returned by the generator and the discrete position-command rollout**. Connecting arcs, including the connection from the supplied current direction to the next command, can remain unsafe. No dynamic-consistency, physical tracking or torque-level guarantee is claimed. The supplied initial direction cannot be retroactively repaired by filtering future generated positions.
 
-**Approved decisions:** retain RFMP's position-chunk horizons, observation conditioning and replanning loop; use the selected body-coordinate QP with `b_i=-e3×(R_i^T c)` on a horizontal frame lift of the frozen model; use a slightly expanded internal cap and measure actual-cone safety; stop and count failure when the next execution portion is unsafe. Do not replace the sampler with a separate complete-trajectory model. The proposal is approved, but specification and tickets remain explicitly on hold for method review. No implementation, tests or experiments have been started.
+**Approved decisions:** retain RFMP's position-chunk horizons, observation conditioning and replanning loop; use the selected direct-S² tangent QP with the frozen model; use a slightly expanded internal cap and measure actual-cone safety; stop and count failure when the next execution portion is unsafe. Do not replace the sampler with a separate complete-trajectory model. The proposal is approved, but specification and tickets remain explicitly on hold for method review. No implementation, tests or experiments have been started.
