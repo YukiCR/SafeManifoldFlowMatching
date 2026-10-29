@@ -22,6 +22,8 @@ Phase 1's method design is settled; its remaining reproduction details will be e
 
 The applicant selected **stop on an unsafe next execution portion**: reject that portion before advancing, retain the last accepted direction and count a rollout failure. No fresh-noise retries. The filter still constrains the complete prediction horizon; unused-tail violations are reported separately. The three [standalone reviews are complete](docs/reviews/README.md), with factual clarifications and numerical risks recorded. Applicant review of [methodology.md](methodology.md) precedes any specification or tickets.
 
+The follow-up [manifold implementation audit](docs/reviews/manifold_implementation_audit.md) reads the geometric-CBF controller/dynamics source and official RFM geometry code. The method now explicitly states its product manifold, tangent bundle, round metric, intrinsic training/filter interpretation and geometric diagnostics. The satellite reference is a mechanical SO(3) system; our approved scope remains a first-order generator on a product of S² factors.
+
 The [data-source comparison](data_options.md) records the alternatives and the selection of LASA LShape. Its small number of independent demonstrations limits the conclusions of the initial trial.
 
 The Git root is `application/SafeManifoldFlowMatching/`; `application/project/` remains a compatibility symlink. Raw/processed datasets, checkpoints and run artifacts are ignored by default. The current repository contains planning documents only. The GitHub remote is https://github.com/YukiCR/SafeManifoldFlowMatching.git. Local setup and remote publication status are verified separately.

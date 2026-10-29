@@ -29,3 +29,7 @@ These edits **do not select numerical defaults, change the prior, add a planner,
 Read [the consolidated methodology](../../methodology.md) first. The material questions are whether the stated limited evidence is worthwhile, whether the remaining numerical risks are acceptable as an empirical study, and whether the disclosed RFMP reproduction gaps and phase gate match the intended project. The detailed reports explain those tradeoffs; successful experiments are not promised by any reviewer.
 
 **Current gate: applicant methodology review.** Specification, tickets, tests, implementation, dataset preparation, training and experiments remain on hold. No new approval question or implementation action is implied by this review summary.
+
+## Follow-up: audit of manifold language against code
+
+At the applicant's request, a subsequent [implementation-level audit](manifold_implementation_audit.md) inspects the geometric-CBF controller/dynamics chain and compares its mechanical geometry with our first-order sampler. A separate [official RFM source audit](rfm_implementation_geometry.md) verifies projections, geodesic/JVP targets, metric loss and integration flags. The methodology now makes its existing round/product geometry explicit. The original three reports' line references remain tied to `c300c67`; the follow-up does not authorize any specification or implementation.

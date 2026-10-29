@@ -2,6 +2,8 @@
 
 Research checked 29 October 2026. This is a design note, not implementation approval. No code, training, simulation or benchmark from these references was executed. The supplied local PDFs were read via extracted text, including the safety constructions and relevant theory/experiment appendices.
 
+**Later source-verification update:** the [manifold implementation audit](../reviews/manifold_implementation_audit.md) successfully reads the geometric-CBF satellite driver, both SO(3) controllers, satellite dynamics and S² controller. Earlier failed-fetch statements below describe the initial reading, not the current availability of those inspected files. The audit distinguishes their mechanical metrics/backstepping from our first-order round-sphere specialization.
+
 ## Main conclusions for the proposal
 
 1. A tangent-velocity controller on `S²` with a forbidden spherical cap is a defensible small experiment linking learned policies, geometry and safety. It is a first-order kinematic pointing problem. It does not establish torque-level satellite control or deformable-object manipulation.

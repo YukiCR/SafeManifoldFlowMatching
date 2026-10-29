@@ -36,6 +36,21 @@ dX_s/ds = V_theta(s, X_s | o_k),      s in [0,1].
 
 `s` is FM generation time, not physical motion time. One integration step adjusts the entire candidate chunk jointly. Keep `o_k` fixed within this generation solve. Intermediate candidates are not executed.
 
+### Manifold, metric and tangent bundle
+
+Use the product of unit spheres with the canonical product round metric:
+
+```text
+M = (S²)^m,                         dim(M) = 2m,
+T_X M = product_i T_(x_i) S²,
+T_(x_i) S² = {v_i in R³ : x_i^T v_i = 0},
+g_X(V,W) = sum_i v_i^T w_i.
+```
+
+A chunk has `3m` stored coordinates but is a point on a `2m`-dimensional manifold. For fixed time/context, `V_theta` is a tangent vector field (a section of `TM`). The virtual input bundle is also `TM`, with identity control action: `U` and `V_theta(X)` belong to **the same fiber `T_X M`**. This is a first-order, fully actuated virtual generator, not a mechanical state on `TSO(3)` or a physical `(q,v)` system on `TS²`.
+
+Embedded arrays represent these objects. Under this explicitly chosen metric, ambient dot products restricted to tangents are intrinsic inner products, and the pointwise projector `P_x=I-xx^T` computes the round-metric tangent projection. Project each sphere factor individually; normalizing one concatenated chunk does not impose the product geometry. The valid embedded representation does not imply that the learned network is rotation-equivariant or that all tangent spaces can be identified with a single fixed plane.
+
 After sampling, advance through the initial execution portion, update the observed history, generate another chunk and replace the old unused tail. The complete motion is assembled by these repeated predictions. **Retain the chunk structure, not identical numerical predictions.** An action in this LASA abstraction is a desired direction/position; it need not be an angular velocity.
 
 ## 4. Phase 1: inherited RFMP baseline
@@ -53,7 +68,17 @@ After sampling, advance through the initial execution portion, update the observ
 | Sampling | Riemannian Euler; generate a chunk, use its execution portion and replan |
 | Endpoints | No added hard start/goal mask or explicit final-goal conditioning |
 
-Geometry: for `x in S²`, let `P_x=I-xx^T`. Each predicted field must be tangent, for example `V_i=P_(x_i) F_i(s,X,o)`. Construct and differentiate a correctly directed geodesic from source to data; regress tangent vectors using the product Riemannian metric. An intrinsic exponential update preserves the intended geometry. Coincident points and antipodal/cut-locus cases need explicit numerical handling later.
+Each predicted field must be tangent, for example `V_i=P_(x_i) F_i(s,X,o)`. The ambient MLP is a parameterization of the tangent field after projection. Use product exponential/logarithm maps, acting factorwise, for the training path:
+
+```text
+X_s = Exp_(X_noise)(s Log_(X_noise)(X_data)),
+W_s = dX_s/ds in T_(X_s) M,
+L = E[ ||V_theta(s,X_s|o)-W_s||²_(g_(X_s)) ].
+```
+
+Both regression vectors live at `X_s`, so their subtraction is well typed and needs no parallel transport. Differentiating the source-to-data geodesic by JVP is a verified reference construction. Do not substitute a vector anchored at `X_noise` or `X_data` without the required map/transport. The loss's normalization remains a reproduction detail.
+
+The exponential Euler form is `X_next=Exp_X(ds*V)` (use `V+U` when steering). Per-factor normalized ambient Euler is a different, retraction-based update. Both must be named accurately; the generic RFM repository has several integration configurations and does not verify which original RFMP implementation was used. The exact update/resolution remains explicit later work. Coincident points and antipodal/cut-locus cases also require handling; neither update certifies discrete barrier satisfaction.
 
 Do not substitute an analytic goal-attraction field for learning, independent noise at every waypoint for the repeated-point prior, or a new sequence architecture for the inherited MLP. Any required deviation must be disclosed rather than presented as an RFMP choice.
 
@@ -62,6 +87,8 @@ Do not substitute an analytic goal-attraction field for learning, independent no
 The precise planar normalization/sphere embedding, split unit, horizon arrays, Gaussian parameter convention, MLP input shapes/layer counting, batching/epoch definition, validation/EMA-checkpoint handling, rollout bootstrap/context handling, terminal padding and integration resolution are unresolved. The paper's MLP input prose omits the evolving action state despite its field equations; retain the state-dependent `V(s,X|o)` formulation rather than silently dropping `X`. Later rollout observations/context must come from generated history, not future demonstration positions. These need explicit later choices, supported by sources where available. **No specification values are selected by this document.**
 
 Seven recordings can produce many overlapping chunks/context pairs but remain seven independent human demonstrations. An exact 80/10/10 whole-recording split is impossible with seven recordings. A window split cannot establish held-out-recording generalization; a grouped-recording split would be a disclosed change from the reported percentages. Do not assume augmentation or share transformed raw datasets without checking provenance and terms.
+
+The repeated-point prior is correlated and supported on the product manifold's diagonal; it is not an independent full-dimensional product draw. Generic RFM's uniform-sphere base/log-density machinery does not implement this wrapped-Gaussian RFMP choice. Keep that attribution and do not claim a full-dimensional product likelihood for the repeated-point source.
 
 ### Baseline preservation
 
@@ -96,9 +123,18 @@ a_i = grad_S² h_i = -(I-x_i x_i^T)c
 
 inside the filter. **Evaluate reported safety and execution acceptance against the actual `theta`.** The margin magnitude is unselected. If an internal residual is bounded below by `-eta`, then `h_actual >= cos(theta)-cos(theta+delta)-eta`. This identity explains the margin but supplies no discrete residual bound by itself.
 
+Intrinsically, define `H_i(X)=h_i(x_i)`. Then `grad_g H_i` has only one nonzero factor, `a_i in T_(x_i) S²`, and
+
+```text
+dH_i|_X[V+U] = g_X(grad_g H_i, V+U)
+              = a_i^T(V_i+U_i).
+```
+
+The displayed projection formula for `a_i` is the round-metric Riemannian gradient, not a metric-independent recipe. A mechanical inertia metric or a different input distribution requires a new gradient/control-adjoint derivation; neither is silently imported from the satellite example.
+
 ### Minimum-change tangent filter
 
-At each controlled generation step, minimize `(1/2) sum_i ||U_i||²` subject to
+At each controlled generation step, minimize `(1/2) ||U||²_(g_X)`, equivalently `(1/2) sum_i ||U_i||²` under the declared metric, subject to
 
 ```text
 a_i^T (V_i + U_i) >= -phi(s) h_i,
@@ -137,6 +173,8 @@ Continue to constrain the full chunk. An unused-tail violation is a whole-chunk 
 
 **Receding-horizon rollouts:** use identical initial histories/scenarios and random-seed schedules; later observation histories can diverge after steering. Apply the same execution stopping check to both nominal and steered Phase 2 comparisons. Report completion, goal error/reaching, pre-acceptance violations, stops/stalls, geometry errors and runtime, retaining failures in the denominator. Preserve the original Phase 1 reproduction separately. If safety changes the numerical grid or stopping time, include an unsteered comparison using that same protocol.
 
+Interpret these diagnostics geometrically: spherical geodesic distance for goal error, adjacent jumps and paired-position displacement; product metric norm for intervention size; per-factor unit-norm and tangency residuals for geometry checks. If roughness compares velocity vectors based at different points, first bring them to a common tangent space by a stated transport, or state an intrinsic common-base-point construction. Raw ambient velocity subtraction is not an intrinsic acceleration. Distance between positions alone requires no tangent transport. Exact diagnostic formulas remain to be selected later.
+
 Zero unsafe executed points obtained solely by stopping is not evidence that CBF steering improved generation. Distinguish goal-reaching completion from merely exhausting a rollout horizon; retain last-accepted goal error for failures. Do not assess fidelity only on favorable survivors or retain only favorable cone placements. Freeze final scenarios, tuning/evaluation separation and thresholds before the final comparison; the conflicting cap should affect returned waypoints, not only connecting arcs. Goal reaching is measured, not guaranteed by a CLF or a pinned endpoint. Preserve actual source draws or an index-based draw schedule so stopped runs do not shift later pairings.
 
 **Explicit limitations:** safe sampled directions do not ensure safe connecting arcs, including the current-to-next-command connection. There is no continuous-path, tracking, dynamic-consistency, global goal-convergence or torque-feasibility guarantee. LASA embedding and one-family results do not establish deformable-object manipulation or general robotics performance.
@@ -152,3 +190,5 @@ Standalone reviewers should independently assess:
 - Which issues are actual methodology blockers, and which are ordinary choices for a later specification?
 
 Review reports are advisory findings, not new applicant decisions. **The applicant reviews this method before any specification or tickets proceed.** No code, tests, simulations, dataset preparation, training or experiments are authorized by this document or the reviews. Detailed background: [proposal](proposal.md), [Phase 2 derivation](methodology_phase2.md), [reference notes](docs/references/flow_matching_and_stability.md).
+
+Additional implementation-level audit: [geometric-CBF code and manifold interpretation](docs/reviews/manifold_implementation_audit.md), with an independent [official RFM source audit](docs/reviews/rfm_implementation_geometry.md). These make the existing round/product geometry explicit; they do not add a physical controller, numerical defaults or a new algorithm family.
