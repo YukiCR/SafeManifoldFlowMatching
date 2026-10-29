@@ -149,6 +149,53 @@ U_i = max(0, -(a_i^T V_i + phi(s) h_i)/||a_i||²) a_i.
 
 This is our specialization of geometric CBF machinery to RFMP generation, not an assertion that the references implement this exact combination. The nominal field still couples positions through the joint chunk.
 
+### User-proposed SO(3)/SO(2) horizontal-frame representation
+
+**Audited representation for applicant review, not a change to the S² learning task.** The applicant proposed writing each direction as `x_i=R_i e3` and expressing the same first-order CBF in body coordinates. The formulas below are mathematically verified under their stated metric and horizontality assumptions; representation adoption/initialization remains part of this method review. Full attitude/roll learning and physical torque dynamics remain outside scope.
+
+Let `pi(R)=R e3`. Its fiber is `R SO(2)`, with the stabilizer understood as rotations fixing `e3`; thus `SO(3)/SO(2) ≅ S²`. For a chunk, the frame space `(SO(3))^m` is an auxiliary lift of `(S²)^m`. Use the normalized bi-invariant metric
+
+```text
+g_R(R hat(u), R hat(v)) = u^T v
+                       = (1/2) tr[(R hat(u))^T (R hat(v))].
+```
+
+The horizontal input space has `Omega^T e3=0`. With `hat(u)v=u×v`, define
+
+```text
+h_i(R_i) = cos(theta_int) - c^T R_i e3,
+b_i = -e3 × (R_i^T c),
+d h_i|_(R_i)[R_i hat(Omega_i)] = b_i^T Omega_i,
+grad h_i(R_i) = R_i hat(b_i).
+```
+
+These are a differential/metric gradient on SO(3), with `b_i` the body-coordinate representation of the differential. Lift the existing RFMP tangent prediction horizontally:
+
+```text
+Omega_nom,i = R_i^T(x_i × v_nom,i),
+R_i hat(Omega_nom,i) e3 = v_nom,i.
+```
+
+For `b_i != 0`, the body-coordinate minimum-change filter is
+
+```text
+lambda_i = max(0, (-b_i^T Omega_nom,i - phi(s)*h_i)/||b_i||²),
+Omega_star,i = Omega_nom,i + lambda_i*b_i,
+R_i^+ = R_i exp(ds*hat(Omega_star,i)),
+x_i^+ = R_i^+ e3.
+```
+
+Both `Omega_nom,i` and `b_i` are horizontal, so the optimizer is horizontal even without adding an explicit horizontal constraint to this particular QP. If `a_i=-(I-x_i x_i^T)c`, then `b_i=R_i^T(x_i×a_i)`, `||b_i||=||a_i||`, and `b_i^T Omega_nom,i=a_i^T v_nom,i`. Projection therefore gives exactly the existing S² correction `v_star,i=v_nom,i+lambda_i*a_i`. Moreover the frozen-vector update obeys `R_i exp(ds*hat(Omega_star,i))e3=Exp_(x_i)(ds*v_star,i)` in exact arithmetic. This is equivalence to **exponential Euler**, not to every possible Riemannian integrator or to the exact time-varying ODE solution.
+
+Important qualifications:
+
+- Call this a **horizontal or zero-axial-spin lift**, not globally zero roll. `Omega^T e3=0` permits geometric holonomy: a closed pointing loop can return with a different frame rotation.
+- There is no global smooth choice `R=R(x)` over all S². Choose an initial frame by a documented local/branched rule and carry the frame along each generation solve; do not assume a globally smooth roll convention. Different initial fiber rotations produce the same pointing updates under the equivariant lift/filter. The learned network still sees S² directions/context, not arbitrary frame axes.
+- The barrier remains degenerate at `x=±c`; lifting does not cure center infeasibility, near-center ill-conditioning, finite-step recovery error or stalls. Retain the approved margin, actual-cone check and stopping rule.
+- The metric normalization is essential to the displayed gradient. A generic inertia-weighted metric changes the gradient/weighted correction and may not preserve this round-sphere equivalence. The satellite's physical backstepping law is not inherited.
+
+Full algebra and independent verification: [quotient-lift audit](docs/reviews/quotient_lift_independent.md). Primary background on horizontal lifts, global sections and holonomy: [Welde and Kumar, Section III-B, Proposition 2 and Remark 2](https://arxiv.org/html/2403.04900v2#S3.SS2). This background does not add a tracking controller to our scope.
+
 ### Terminal recovery and its limits
 
 Retain the Phase 1 prior **without excluding unsafe cone samples**. Intermediate candidates may be unsafe. Follow SAD-Flower's nominal initial generation interval and controlled later interval; its reference schedule is `phi(s)=gamma/(1-s)^2`, `gamma>0`. Activation, gain, numerical stopping and integration settings are unresolved.

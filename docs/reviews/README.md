@@ -33,3 +33,7 @@ Read [the consolidated methodology](../../methodology.md) first. The material qu
 ## Follow-up: audit of manifold language against code
 
 At the applicant's request, a subsequent [implementation-level audit](manifold_implementation_audit.md) inspects the geometric-CBF controller/dynamics chain and compares its mechanical geometry with our first-order sampler. A separate [official RFM source audit](rfm_implementation_geometry.md) verifies projections, geodesic/JVP targets, metric loss and integration flags. The methodology now makes its existing round/product geometry explicit. The original three reports' line references remain tied to `c300c67`; the follow-up does not authorize any specification or implementation.
+
+## Follow-up: user-proposed SO(3)/SO(2) lift
+
+The [independent quotient-lift review](quotient_lift_independent.md) verifies the applicant's barrier differential, normalized-metric gradient, body-coordinate projection, horizontal nominal lift and exact projected exponential-Euler identity. The key correction is terminology: horizontal zero instantaneous axial spin is not global zero roll; holonomy and the lack of a global smooth frame section must be acknowledged. Metric changes and unsafe-center degeneracy retain their existing caveats. The audited representation is recorded in the core method for applicant review; it does not automatically change the approved S² learning task or authorize specs/tickets/implementation.

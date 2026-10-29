@@ -24,6 +24,8 @@ The applicant selected **stop on an unsafe next execution portion**: reject that
 
 The follow-up [manifold implementation audit](docs/reviews/manifold_implementation_audit.md) reads the geometric-CBF controller/dynamics source and official RFM geometry code. The method now explicitly states its product manifold, tangent bundle, round metric, intrinsic training/filter interpretation and geometric diagnostics. The satellite reference is a mechanical SO(3) system; our approved scope remains a first-order generator on a product of S² factors.
 
+The applicant's proposed SO(3)/SO(2) horizontal-frame formulation has an [independent algebraic audit](docs/reviews/quotient_lift_independent.md) and is included in the methodology for review. Under the normalized metric and horizontal lift it gives exactly the same S² tangent filter and exponential-Euler pointing step. This is an auxiliary frame representation, not full-attitude learning; global zero roll is not implied.
+
 The [data-source comparison](data_options.md) records the alternatives and the selection of LASA LShape. Its small number of independent demonstrations limits the conclusions of the initial trial.
 
 The Git root is `application/SafeManifoldFlowMatching/`; `application/project/` remains a compatibility symlink. Raw/processed datasets, checkpoints and run artifacts are ignored by default. The current repository contains planning documents only. The GitHub remote is https://github.com/YukiCR/SafeManifoldFlowMatching.git. Local setup and remote publication status are verified separately.
