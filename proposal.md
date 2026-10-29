@@ -68,7 +68,7 @@ V_theta,i(s,X,o) = P_x_i F_theta,i(s,X,o)
 
 Here `o` is the agreed start/goal/task conditioning. The model should see the sequence jointly rather than treating every waypoint as an unrelated training example. Sphere exp/log formulas, coincident points, antipodal ambiguity, endpoint pinning and target derivatives require explicit handling in the later specification. [Riemannian FM](https://arxiv.org/abs/2302.03660)
 
-SRFMP provides a possible stability-oriented comparison through augmented pseudo-time and exponentially contracting conditional paths. Its stability concerns the generative distribution. An approximate learned field and its CBF-corrected version do not automatically inherit exact convergence. The supplied paper also has direction/tangent-anchor notation inconsistencies; derive targets from the intended path. Whether stable FM is mandatory or a time-boxed extension remains open. [Detailed reading](../research/flow_matching_and_stability.md)
+SRFMP provides a possible stability-oriented comparison through augmented pseudo-time and exponentially contracting conditional paths. Its stability concerns the generative distribution. An approximate learned field and its CBF-corrected version do not automatically inherit exact convergence. The supplied paper also has direction/tangent-anchor notation inconsistencies; derive targets from the intended path. Whether stable FM is mandatory or a time-boxed extension remains open. [Detailed reading](docs/references/flow_matching_and_stability.md)
 
 ## Generation-time geometric CBF layer
 
@@ -141,7 +141,7 @@ Proposed outputs: reproducible source/configuration, a visualization of a candid
 | SAD-Flower | [Author repository](https://github.com/TzuYuan107/sad-flower), MIT; trajectory constraint machinery | Reference its generation-time control design; full MuJoCo/D4RL reproduction is outside scope |
 | General RFM | [Official Meta repository](https://github.com/facebookresearch/riemannian-fm), archived, CC BY-NC 4.0 | Useful attributed geometry/training references; avoid recreating the entire old environment |
 
-Detailed paper readings: [flow matching/stability](../research/flow_matching_and_stability.md), [geometric safety/SAD-Flower](../research/manifold_safety_references.md). No reference code was installed or executed. Existing conda environments have PyTorch/pytest metadata, but working imports and compute availability remain to be checked after approval.
+Detailed paper readings: [flow matching/stability](docs/references/flow_matching_and_stability.md), [geometric safety/SAD-Flower](docs/references/manifold_safety_references.md). No reference code was installed or executed. Existing conda environments have PyTorch/pytest metadata, but working imports and compute availability remain to be checked after approval.
 
 ## Time budget and workflow
 

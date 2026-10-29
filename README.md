@@ -20,11 +20,11 @@ The data-source decision is settled. Endpoint conditioning, model variants and e
 
 The [data-source comparison](data_options.md) records the alternatives and the selection of LASA LShape. Its small number of independent demonstrations limits the conclusions of the initial trial.
 
-The Git root is `application/SafeManifoldFlowMatching/`; `application/project/` remains a compatibility symlink. Raw/processed datasets, checkpoints and run artifacts are ignored by default. The current repository contains planning documents only. A remote or publication has not been configured.
+The Git root is `application/SafeManifoldFlowMatching/`; `application/project/` remains a compatibility symlink. Raw/processed datasets, checkpoints and run artifacts are ignored by default. The current repository contains planning documents only. The GitHub remote is https://github.com/YukiCR/SafeManifoldFlowMatching.git. Local setup and remote publication status are verified separately.
 
 Research notes:
 
-- [Flow matching and stable policy paper](../research/flow_matching_and_stability.md).
-- [SAD-Flower and geometric CBF paper](../research/manifold_safety_references.md).
+- [Flow matching and stable policy paper](docs/references/flow_matching_and_stability.md).
+- [SAD-Flower and geometric CBF paper](docs/references/manifold_safety_references.md).
 
 The research notes distinguish paper results, source availability and our proposed adaptations. They are not evidence of completed applicant project experience.
