@@ -1,6 +1,6 @@
 # Phase 2 methodology proposal
 
-29 October 2026. **Draft for design discussion, not an approved specification or implementation.** Phase 1's RFMP method is selected; undocumented reproduction details remain specification items. This draft recommends adding safety to that same chunk sampler. The applicant has not yet selected Phase 2's chunk-versus-complete-trajectory scope.
+29 October 2026. **Methodology under design discussion; not an approved specification or implementation.** The applicant approved retaining RFMP's same position-chunk horizons and replanning loop for Phase 2, steering each FM generation solve while freezing the Phase 1 model. The internal safety margin and remaining numerical/evaluation choices are still proposed. Undocumented Phase 1 reproduction details remain specification items.
 
 ## Objective and scope
 
@@ -79,4 +79,4 @@ Use terminal goal error as an outcome, not as a hard safety constraint or an imp
 
 The intended result concerns **sampled directions returned by the generator and the discrete position-command rollout**. Connecting arcs, including the connection from the supplied current direction to the next command, can remain unsafe. No dynamic-consistency, physical tracking or torque-level guarantee is claimed. The supplied initial direction cannot be retroactively repaired by filtering future generated positions.
 
-First decision: retain RFMP chunks and replanning for Phase 2, as recommended here, or choose a separate complete-trajectory formulation. Only the former directly supports the proposed frozen-checkpoint comparison. Remaining design discussion covers the cone/scenario setup, internal safety margin, failure accounting and evaluation criteria; exact numerical values belong in the approved specification. No implementation, tests or experiments have been started.
+**Approved decision:** retain the same RFMP position-chunk horizons, observation conditioning and replanning loop; add generation-time correction using the frozen Phase 1 model. Do not replace the sampler with a separate complete-trajectory model. Remaining design discussion covers the cone/scenario setup, internal safety margin, failure accounting and evaluation criteria; exact numerical values belong in the approved specification. No implementation, tests or experiments have been started.

@@ -2,7 +2,7 @@
 
 Checked 29 October 2026. Reading only; no implementation, installation, dataset generation, training or inference. This review does not approve project design choices.
 
-**Subsequent applicant decision:** Phase 1 reimplements RFMP's LASA method and inherits its documented choices. This supersedes the earlier complete-trajectory and hard-endpoint recommendations below for Phase 1. Phase 2's chunk-versus-complete-trajectory scope remains pending. See the [current proposal](../../proposal.md).
+**Subsequent applicant decisions:** Phase 1 reimplements RFMP's LASA method and inherits its documented choices. Phase 2 retains those same position chunks and the replanning loop, adding generation-time safety steering with the frozen model. These decisions supersede the earlier complete-trajectory and hard-endpoint recommendations below. See the [current proposal](../../proposal.md).
 
 ## Most relevant LASA comparison
 

@@ -12,13 +12,13 @@ Approved design choices so far:
 - **Connecting arcs may be unsafe.** Waypoint safety is not a continuous-motion guarantee.
 - **Dynamic-consistency guarantees are out of scope.**
 - **Unconstrained initial noise with terminal waypoint-safety recovery**, following SAD-Flower. Intermediate generated candidates may be unsafe.
-- **Two development phases:** first reproduce RFMP without safety; then safety steering inside the FM sampler. Preserve a reproducible Phase 1 baseline before Phase 2. Whether Phase 2 steers those same chunks or uses a separate complete-trajectory formulation awaits the applicant's answer.
+- **Two development phases:** first reproduce RFMP without safety; then steer those same RFMP position chunks inside FM generation, retaining the replanning loop and frozen Phase 1 model. The applicant approved this Phase 2 structure. Preserve a reproducible Phase 1 baseline before Phase 2.
 - **Initial dataset:** one LASA handwriting family, **LShape**, embedded on S².
 - **Version control:** a dedicated local Git repository named SafeManifoldFlowMatching.
 
-The Phase 1 method and documented RFMP settings are selected. Do not add hard start/goal pinning, a new sequence architecture or mandatory SRFMP to that reproduction. Undocumented preprocessing/split details and Phase 2 scope remain to be resolved. Overall proposal approval and the specification/tickets/TDD stages remain pending. See the [provisional proposal](proposal.md).
+The Phase 1 method, documented RFMP settings and Phase 2 chunk/replanning structure are selected. Do not add hard start/goal pinning, a new sequence architecture or mandatory SRFMP to that reproduction. Undocumented reproduction details and Phase 2 numerical safety/evaluation choices remain to be resolved. Overall proposal approval and the specification/tickets/TDD stages remain pending. See the [provisional proposal](proposal.md).
 
-Phase 1's method design is settled; its remaining reproduction details will be explicit in the specification. The [Phase 2 methodology draft](methodology_phase2.md) proposes steering the same RFMP chunks, with barrier equations, terminal-recovery handling, evaluation and failure accounting. It is ready for design discussion; its pending choices are not approved by the draft's existence.
+Phase 1's method design is settled; its remaining reproduction details will be explicit in the specification. The [Phase 2 methodology draft](methodology_phase2.md) records the approved chunk/replanning structure and proposed barrier equations, numerical terminal-recovery handling, evaluation and failure accounting. An internal angular margin remains a pending design choice.
 
 The [data-source comparison](data_options.md) records the alternatives and the selection of LASA LShape. Its small number of independent demonstrations limits the conclusions of the initial trial.
 

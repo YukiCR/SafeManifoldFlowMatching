@@ -56,7 +56,7 @@ The initial trial does not establish multi-skill, multi-family or real-world rob
 Avoid committing to two separate full training studies within 18 hours. Whichever source is chosen:
 
 - **Phase 1:** reimplement RFMP's LASA method on LShape without safety; preserve the checkpoint, exact split unit/indices, preprocessing, configuration, rollout initialization and baseline generations.
-- **Phase 2:** add generation-time safety steering. Retaining the same short chunks permits a frozen-checkpoint comparison; using a separate complete-trajectory model would require its own nominal baseline. The applicant's Phase 2 scope decision is pending.
+- **Phase 2:** add generation-time safety steering to the same short position chunks, retaining RFMP's replanning loop and frozen Phase 1 model. The applicant approved this structure; numerical recovery and evaluation details remain under discussion.
 
 If LASA is selected, check and respect its published data-use terms before packaging artifacts. The official repository permits noncommercial academic use with attribution and places restrictions on modification/distribution; do not assume transformed datasets can be bundled in a public repository. No external release is currently requested.
 

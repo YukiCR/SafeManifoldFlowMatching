@@ -17,7 +17,7 @@ Primary references are **RFMP**, **From Bundles to Backstepping**, and **SAD-Flo
 - **No dynamic-consistency guarantee.** Sphere membership and waypoint constraints do not establish physical state/action consistency.
 - For Phase 2, start generated position coordinates from **sphere-valued noise unconstrained by the forbidden cone** and recover waypoint safety by the end of generation, referring to SAD-Flower. Intermediate candidates may be unsafe. This does not require uniform noise over the full sphere.
 - Maximum project work: **18 hours**, preserving headroom for the 30 October application.
-- Develop in two auditable phases: **Phase 1, reproduce RFMP without safety; Phase 2, add safety steering inside generation.** Establish a reproducible Phase 1 baseline before beginning Phase 2. Whether Phase 2 retains the same short chunks or uses a separate complete-trajectory formulation is awaiting the applicant's decision.
+- Develop in two auditable phases: **Phase 1, reproduce RFMP without safety; Phase 2, add safety steering inside generation.** The applicant approved retaining the same RFMP position-chunk horizons, replanning loop and frozen model for Phase 2. Establish a reproducible Phase 1 baseline before beginning Phase 2.
 - Initial trials use **LASA LShape only**, mapped onto S². Do not expand to multiple families or switch to synthetic training data without agreement.
 - Manage the project with its own Git repository, **SafeManifoldFlowMatching**, at `application/SafeManifoldFlowMatching/`.
 
@@ -39,7 +39,7 @@ See [the data-source comparison](data_options.md). The selected source supplies 
 
 **Method-design status:** Phase 1's method is settled. Under-specified reproduction details are explicit specification items, not permission to replace the method or import proposed Phase 2 mechanisms. The next design stage is Phase 2; see its [concrete methodology draft](methodology_phase2.md).
 
-**Phase 2 — safety inside generation.** The recommended formulation adds terminal-recovery steering directly to the same RFMP chunk sampler and retains replanning; that scope decision is pending. It permits a frozen-model comparison against Phase 1. Use the same initial observations and random-seed schedule, and the same source samples for matched single-chunk comparisons. In multi-step rollouts, steered and nominal histories can diverge, so observation conditions need not remain identical. Do not retrain or change preprocessing to obtain an apparent safety improvement. If the applicant instead chooses a separate complete-trajectory formulation, record that model change and establish its own nominal baseline rather than claiming to reuse the short-chunk checkpoint unchanged. Record violations, motion fidelity/roughness, interventions, runtime and failure cases.
+**Phase 2 — safety inside generation.** The approved structure adds terminal-recovery steering directly to the same RFMP chunk sampler and retains replanning. It permits a frozen-model comparison against Phase 1. Use the same initial observations and random-seed schedule, and the same source samples for matched single-chunk comparisons. In multi-step rollouts, steered and nominal histories can diverge, so observation conditions need not remain identical. Do not retrain or change preprocessing to obtain an apparent safety improvement. A separate complete-trajectory generator is outside this selected structure. Record violations, motion fidelity/roughness, interventions, runtime and failure cases. Numerical recovery and evaluation details remain under design discussion.
 
 Each phase proceeds through approved vertical tickets and TDD. Do not mix safety changes into Phase 1 or begin Phase 2 with an unvalidated nominal generator. This structure does not authorize implementation before proposal approval.
 
@@ -125,7 +125,7 @@ For one independent cap constraint per waypoint, an unbounded minimum-norm tange
 U_i = max(0, -(a_iᵀV_theta,i + phi(s) h_i)/||a_i||²) a_i.
 ```
 
-Handle the zero-gradient branch explicitly. This simple, separable correction is attractive under the time budget, provided no additional coupled constraints are silently assumed. It applies the geometric CBF paper's first-order bundle formulation; it does not reproduce torque-level backstepping. Whether it acts on RFMP chunks or a separate complete-trajectory generator awaits the Phase 2 scope decision. [Geometric CBF paper](https://arxiv.org/abs/2510.20202v1)
+Handle the zero-gradient branch explicitly. This simple, separable correction is attractive under the time budget, provided no additional coupled constraints are silently assumed. It applies the geometric CBF paper's first-order bundle formulation; it does not reproduce torque-level backstepping. Under the approved Phase 2 structure it acts on RFMP position chunks. [Geometric CBF paper](https://arxiv.org/abs/2510.20202v1)
 
 ### Selected initialization and terminal objective
 
@@ -184,4 +184,4 @@ Detailed paper readings: [flow matching/stability](docs/references/flow_matching
 
 Proposed hard stop is 30 October 10:00 China time or earlier, retaining the rest of the day for application preparation. Confirm the cutoff during grilling. Research for this proposal began about 15:58 China time on 29 October. Do not consume the entire budget merely because it is available.
 
-Follow **grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed boundaries**. Phase 1's RFMP method and documented decisions are selected; hard endpoint pinning and a separate whole-trajectory model are superseded for that phase. Remaining decisions include Phase 2 chunk-versus-complete-trajectory scope, under-specified reproduction details, evaluation thresholds and the hard stop. LASA LShape, Git management and terminal-recovery initialization are agreed. No project implementation, tests, generated data, model training or experiments are approved yet.
+Follow **grilling → approved proposal → specification → approved vertical-slice tickets → TDD at agreed boundaries**. Phase 1's RFMP method and Phase 2's same-chunk/replanning structure are selected. Hard endpoint pinning and a separate whole-trajectory model are outside that structure. Remaining decisions include numerical recovery/internal margin, under-specified reproduction details, evaluation thresholds and the hard stop. LASA LShape, Git management and terminal-recovery initialization are agreed. No project implementation, tests, generated data, model training or experiments are approved yet.
